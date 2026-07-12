@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI老友記 — Mockup Preview</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    font-family: -apple-system, "PingFang HK", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+    background:#e8e4dc; min-height:100vh;
+    display:flex; align-items:center; justify-content:center; gap:40px;
+    padding:24px; flex-wrap:wrap;
+  }
+  .side-note{max-width:260px;color:#555;font-size:15px;line-height:1.7}
+  .side-note h1{font-size:22px;color:#222;margin-bottom:12px}
+  .side-note .tag{display:inline-block;background:#fff;border:1.5px solid #ccc;border-radius:20px;padding:3px 12px;margin:3px 4px 3px 0;font-size:13px;color:#444}
+  .phone{
+    width:400px; height:820px; background:#fff; border-radius:44px;
+    border:10px solid #1c1c1e; overflow:hidden; position:relative;
+    box-shadow:0 24px 60px rgba(0,0,0,.25); display:flex; flex-direction:column;
+  }
+  .screen{flex:1; overflow-y:auto; display:none; flex-direction:column; background:#faf8f4;}
+  .screen.active{display:flex;}
+  /* ---------- 通用 ---------- */
+  .topbar{padding:26px 24px 14px; background:#faf8f4;}
+  .topbar h2{font-size:32px; color:#1c1c1e; font-weight:800;}
+  .topbar p{font-size:20px; color:#6b6b6b; margin-top:4px;}
+  .bigbtn{
+    display:flex; align-items:center; gap:16px; width:100%;
+    border:none; border-radius:22px; padding:22px 24px; margin-top:16px;
+    font-size:26px; font-weight:700; cursor:pointer; text-align:left;
+    box-shadow:0 3px 0 rgba(0,0,0,.12); transition:transform .08s;
+  }
+  .bigbtn:active{transform:scale(.97);}
+  .bigbtn .ico{font-size:36px; flex-shrink:0;}
+  .bigbtn small{display:block; font-size:18px; font-weight:400; margin-top:4px; opacity:.85;}
+  /* ---------- 主頁 ---------- */
+  .greet{padding:30px 24px 10px;}
+  .greet .hello{font-size:34px; font-weight:800; color:#1c1c1e; line-height:1.3;}
+  .greet .sub{font-size:22px; color:#6b6b6b; margin-top:6px;}
+  .today-card{
+    margin:20px 24px 0; background:#2f6f4f; border-radius:26px; padding:26px;
+    color:#fff; cursor:pointer; box-shadow:0 4px 0 #1f4d36;
+  }
+  .today-card .label{font-size:20px; opacity:.9;}
+  .today-card h3{font-size:30px; font-weight:800; margin:10px 0 14px; line-height:1.35;}
+  .today-card .go{background:#fff; color:#2f6f4f; display:inline-block; font-size:24px; font-weight:800; padding:12px 28px; border-radius:16px;}
+  .home-btns{padding:8px 24px 24px;}
+  .streak-strip{
+    margin:22px 24px 0; background:#fff; border:2px solid #eee; border-radius:20px;
+    padding:16px 20px; font-size:22px; color:#444; display:flex; align-items:center; gap:12px;
+  }
+  /* ---------- 課堂 ---------- */
+  .lesson-body{padding:10px 24px 30px; flex:1;}
+  .step-pill{font-size:20px; color:#2f6f4f; font-weight:700; background:#e5f2ea; display:inline-block; padding:6px 18px; border-radius:14px; margin-bottom:14px;}
+  .lesson-body h3{font-size:30px; line-height:1.4; color:#1c1c1e; margin-bottom:14px;}
+  .lesson-body .talk{font-size:24px; line-height:1.65; color:#333;}
+  .demo-box{
+    margin:20px 0; background:#fff; border:2.5px dashed #b7cfc2; border-radius:20px;
+    padding:22px; font-size:22px; color:#333; line-height:1.6;
+  }
+  .demo-box .bubble-user{background:#dcf3e6; border-radius:16px; padding:14px 16px; margin-bottom:12px; font-size:22px;}
+  .demo-box .bubble-ai{background:#f0f0f0; border-radius:16px; padding:14px 16px; font-size:22px;}
+  .listen-btn{background:#fff; color:#2f6f4f; border:2.5px solid #2f6f4f;}
+  .next-btn{background:#2f6f4f; color:#fff; justify-content:center; text-align:center;}
+  .quiz-opt{background:#fff; color:#1c1c1e; border:2.5px solid #ddd;}
+  .quiz-opt.correct{background:#e5f2ea; border-color:#2f6f4f; color:#2f6f4f;}
+  .quiz-opt.wrong{background:#fdecec; border-color:#d9534f; color:#d9534f;}
+  .quiz-feedback{font-size:24px; font-weight:700; margin-top:18px; display:none;}
+  /* ---------- 進度 ---------- */
+  .prog-card{margin:16px 24px 0; background:#fff; border-radius:22px; border:2px solid #eee; padding:22px;}
+  .prog-card h4{font-size:24px; color:#1c1c1e; margin-bottom:12px;}
+  .prog-bar{height:26px; background:#eee; border-radius:13px; overflow:hidden;}
+  .prog-bar>div{height:100%; background:#2f6f4f; border-radius:13px;}
+  .prog-num{font-size:22px; color:#555; margin-top:10px;}
+  .badges{display:flex; gap:14px; margin-top:6px; flex-wrap:wrap;}
+  .badge{width:86px; text-align:center; font-size:17px; color:#444;}
+  .badge .b-ico{font-size:44px; background:#fdf4dd; border-radius:50%; width:74px; height:74px; display:flex; align-items:center; justify-content:center; margin:0 auto 6px;}
+  .badge.locked .b-ico{background:#f0f0f0; filter:grayscale(1); opacity:.45;}
+  /* ---------- 家人 ---------- */
+  .fam-card{margin:16px 24px 0; background:#fff; border-radius:22px; border:2px solid #eee; padding:22px; font-size:22px; line-height:1.6; color:#333;}
+  .fam-card .fam-head{display:flex; align-items:center; gap:14px; margin-bottom:10px;}
+  .fam-card .avatar{width:56px; height:56px; border-radius:50%; background:#dce8f5; display:flex; align-items:center; justify-content:center; font-size:30px;}
+  .fam-card .name{font-size:24px; font-weight:800; color:#1c1c1e;}
+  .fam-msg{background:#eef5fc; border-radius:16px; padding:14px 16px; font-size:22px; margin-top:10px;}
+  .toggle-row{display:flex; justify-content:space-between; align-items:center; font-size:23px; color:#1c1c1e; padding:6px 0;}
+  .toggle{width:70px; height:40px; border-radius:20px; background:#2f6f4f; position:relative; cursor:pointer; flex-shrink:0;}
+  .toggle::after{content:""; position:absolute; top:4px; right:4px; width:32px; height:32px; background:#fff; border-radius:50%;}
+  /* ---------- 底部導航 ---------- */
+  .navbar{
+    display:flex; background:#fff; border-top:2px solid #e5e5e5; flex-shrink:0;
+  }
+  .nav-item{
+    flex:1; border:none; background:none; padding:14px 4px 20px; cursor:pointer;
+    font-size:19px; color:#8a8a8a; font-weight:700;
+  }
+  .nav-item .n-ico{display:block; font-size:34px; margin-bottom:4px;}
+  .nav-item.on{color:#2f6f4f;}
+</style>
+</head>
+<body>
+
+<div class="side-note">
+  <h1>AI老友記<br><span style="font-size:15px;color:#888">（Mockup Preview）</span></h1>
+  <p>右邊係可以撳嘅 mockup，四個 tab 都行到，課堂入面可以行晒成課流程（包括答問題）。</p>
+  <br>
+  <p><b>已落實嘅設計原則：</b></p>
+  <span class="tag">最細字 22px</span>
+  <span class="tag">全程撳掣・唔使打字</span>
+  <span class="tag">每課一個生活場景</span>
+  <span class="tag">有「讀出嚟」掣</span>
+  <span class="tag">家人進度 optional</span>
+  <span class="tag">每週 2–3 新課</span>
+</div>
+
+<div class="phone">
+
+  <!-- ============ 主頁 ============ -->
+  <div class="screen active" id="scr-home">
+    <div class="greet">
+      <div class="hello">早晨，陳伯 👋</div>
+      <div class="sub">今日想學啲咩？</div>
+    </div>
+    <div class="today-card" onclick="go('lesson');lessonStep(1)">
+      <div class="label">📅 今日新課</div>
+      <h3>影張相，問 AI<br>呢隻藥點樣食</h3>
+      <div class="go">開始上堂 ▶</div>
+    </div>
+    <div class="home-btns">
+      <button class="bigbtn" style="background:#fdf4dd;color:#8a6d1a" onclick="go('lesson');lessonStep(1)">
+        <span class="ico">📖</span><span>繼續上次課堂<small>第 3 課 · 學咗一半</small></span>
+      </button>
+      <button class="bigbtn" style="background:#fdecec;color:#a33" >
+        <span class="ico">🛡️</span><span>防騙必修班<small>認清 AI 假電話、假影片</small></span>
+      </button>
+      <button class="bigbtn" style="background:#eef5fc;color:#2a5d8f">
+        <span class="ico">📞</span><span>唔識就撳我<small>大字圖解 + 真人語音教你</small></span>
+      </button>
+    </div>
+    <div class="streak-strip">🔥 連續學咗 <b style="color:#d9822b;font-size:26px">&nbsp;5&nbsp;</b> 日，好叻呀！</div>
+  </div>
+
+  <!-- ============ 課堂 ============ -->
+  <div class="screen" id="scr-lesson">
+    <div class="topbar">
+      <h2>📖 第 12 課</h2>
+      <p>影張相，問 AI 呢隻藥點樣食</p>
+    </div>
+    <div class="lesson-body" id="lesson-1">
+      <div class="step-pill">第 1 步 / 共 3 步</div>
+      <h3>點解要學呢樣嘢？</h3>
+      <p class="talk">藥袋上面啲字好細，又多英文。<br><br>其實你只要<b>影張相</b>，AI 就會用中文話你知：呢隻藥係咩、幾時食、有咩要注意。</p>
+      <button class="bigbtn listen-btn"><span class="ico">🔊</span><span>讀出嚟俾我聽</span></button>
+      <button class="bigbtn next-btn" onclick="lessonStep(2)"><span>下一步 ▶</span></button>
+    </div>
+    <div class="lesson-body" id="lesson-2" style="display:none">
+      <div class="step-pill">第 2 步 / 共 3 步</div>
+      <h3>睇下 AI 點答</h3>
+      <div class="demo-box">
+        <div class="bubble-user">📷（藥袋相片）<br>呢隻藥係咩嚟？</div>
+        <div class="bubble-ai">呢隻係<b>血壓藥</b>。每日食一次，最好朝早食。記住唔好自己停藥，有疑問要問醫生。💊</div>
+      </div>
+      <p class="talk">就係咁簡單！唔使打字，<b>影相 + 撳一下</b>就得。</p>
+      <button class="bigbtn listen-btn"><span class="ico">🔊</span><span>讀出嚟俾我聽</span></button>
+      <button class="bigbtn next-btn" onclick="lessonStep(3)"><span>下一步 ▶</span></button>
+    </div>
+    <div class="lesson-body" id="lesson-3" style="display:none">
+      <div class="step-pill">第 3 步 / 共 3 步 · 考下你</div>
+      <h3>AI 話你知藥物資料之後，你應該——</h3>
+      <button class="bigbtn quiz-opt" id="q-a" onclick="answer(false)"><span class="ico">❌</span><span>即刻自己停藥</span></button>
+      <button class="bigbtn quiz-opt" id="q-b" onclick="answer(true)"><span class="ico">✅</span><span>當參考，有疑問問返醫生</span></button>
+      <div class="quiz-feedback" id="fb-good" style="color:#2f6f4f">👏 啱晒！AI 係好幫手，但健康大事都要問醫生。</div>
+      <div class="quiz-feedback" id="fb-bad" style="color:#d9534f">再諗下 — AI 講嘅嘢係參考，藥唔可以自己亂停㗎。</div>
+      <button class="bigbtn next-btn" id="finish-btn" style="display:none" onclick="go('progress')"><span>完成課堂 🎉</span></button>
+    </div>
+  </div>
+
+  <!-- ============ 進度 ============ -->
+  <div class="screen" id="scr-progress">
+    <div class="topbar">
+      <h2>🌱 我嘅進度</h2>
+      <p>一步一步嚟，唔使急</p>
+    </div>
+    <div class="prog-card">
+      <h4>第一層 · AI 入門（淺）</h4>
+      <div class="prog-bar"><div style="width:100%"></div></div>
+      <div class="prog-num">✅ 完成晒 8 / 8 課</div>
+    </div>
+    <div class="prog-card">
+      <h4>第二層 · 生活應用（中）</h4>
+      <div class="prog-bar"><div style="width:50%"></div></div>
+      <div class="prog-num">學緊 6 / 12 課</div>
+    </div>
+    <div class="prog-card">
+      <h4>第三層 · 進階玩法（深）</h4>
+      <div class="prog-bar"><div style="width:0%"></div></div>
+      <div class="prog-num">🔒 完成第二層就開到</div>
+    </div>
+    <div class="prog-card">
+      <h4>我攞到嘅獎章</h4>
+      <div class="badges">
+        <div class="badge"><div class="b-ico">🐣</div>初次見面</div>
+        <div class="badge"><div class="b-ico">🔥</div>連學 5 日</div>
+        <div class="badge"><div class="b-ico">🛡️</div>防騙高手</div>
+        <div class="badge locked"><div class="b-ico">🎓</div>AI 達人</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 家人 ============ -->
+  <div class="screen" id="scr-family">
+    <div class="topbar">
+      <h2>👨‍👩‍👧 家人同行</h2>
+      <p>俾屋企人知道你學得幾好（可以隨時閂）</p>
+    </div>
+    <div class="fam-card">
+      <div class="toggle-row">
+        <span>分享我嘅學習進度</span>
+        <div class="toggle"></div>
+      </div>
+    </div>
+    <div class="fam-card">
+      <div class="fam-head">
+        <div class="avatar">👩</div>
+        <div><div class="name">阿女 (Stephanie)</div><div style="font-size:19px;color:#888">可以睇到你嘅進度</div></div>
+      </div>
+      <div class="fam-msg">💬「爸爸你連學5日勁呀！繼續加油！」</div>
+      <button class="bigbtn" style="background:#eef5fc;color:#2a5d8f;margin-top:14px">
+        <span class="ico">👍</span><span>覆返個讚俾佢</span>
+      </button>
+    </div>
+    <div class="fam-card" style="color:#888;font-size:20px">
+      ➕ 想加多個家人？撳呢度用 WhatsApp 邀請。
+    </div>
+  </div>
+
+  <!-- ============ NAV ============ -->
+  <div class="navbar">
+    <button class="nav-item on" id="nav-home" onclick="go('home')"><span class="n-ico">🏠</span>主頁</button>
+    <button class="nav-item" id="nav-lesson" onclick="go('lesson')"><span class="n-ico">📖</span>上堂</button>
+    <button class="nav-item" id="nav-progress" onclick="go('progress')"><span class="n-ico">🌱</span>進度</button>
+    <button class="nav-item" id="nav-family" onclick="go('family')"><span class="n-ico">👨‍👩‍👧</span>家人</button>
+  </div>
+</div>
+
+<script>
+  function go(name){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('scr-'+name).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('on'));
+    document.getElementById('nav-'+name).classList.add('on');
+  }
+  function lessonStep(n){
+    [1,2,3].forEach(i=>document.getElementById('lesson-'+i).style.display = (i===n?'block':'none'));
+  }
+  function answer(ok){
+    document.getElementById('fb-good').style.display = ok?'block':'none';
+    document.getElementById('fb-bad').style.display = ok?'none':'block';
+    if(ok){
+      document.getElementById('q-b').classList.add('correct');
+      document.getElementById('q-a').classList.remove('wrong');
+      document.getElementById('finish-btn').style.display='flex';
+    }else{
+      document.getElementById('q-a').classList.add('wrong');
+    }
+  }
+</script>
+</body>
+</html>
