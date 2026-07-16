@@ -1,0 +1,84 @@
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body, #root { height:100%; }
+body {
+  font-family: -apple-system, "PingFang HK", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+  background:#e8e4dc;
+}
+.app {
+  max-width:480px; margin:0 auto; height:100dvh; background:#faf8f4;
+  display:flex; flex-direction:column; overflow:hidden;
+}
+.screen{flex:1; overflow-y:auto; display:flex; flex-direction:column; background:#faf8f4;}
+/* ---------- 通用 ---------- */
+.topbar{padding:26px 24px 14px; background:#faf8f4;}
+.topbar h2{font-size:32px; color:#1c1c1e; font-weight:800;}
+.topbar p{font-size:20px; color:#6b6b6b; margin-top:4px;}
+.bigbtn{
+  display:flex; align-items:center; gap:16px; width:100%;
+  border:none; border-radius:22px; padding:22px 24px; margin-top:16px;
+  font-size:26px; font-weight:700; cursor:pointer; text-align:left;
+  box-shadow:0 3px 0 rgba(0,0,0,.12); transition:transform .08s;
+  min-height:60px;
+}
+.bigbtn:active{transform:scale(.97);}
+.bigbtn:disabled{opacity:.5; cursor:not-allowed;}
+.bigbtn .ico{font-size:36px; flex-shrink:0;}
+.bigbtn small{display:block; font-size:18px; font-weight:400; margin-top:4px; opacity:.85;}
+/* ---------- 主頁 ---------- */
+.greet{padding:30px 24px 10px;}
+.greet .hello{font-size:34px; font-weight:800; color:#1c1c1e; line-height:1.3;}
+.greet .sub{font-size:22px; color:#6b6b6b; margin-top:6px;}
+.today-card{
+  margin:20px 24px 0; background:#2f6f4f; border-radius:26px; padding:26px;
+  color:#fff; cursor:pointer; box-shadow:0 4px 0 #1f4d36;
+}
+.today-card .label{font-size:20px; opacity:.9;}
+.today-card h3{font-size:30px; font-weight:800; margin:10px 0 14px; line-height:1.35;}
+.today-card .go{background:#fff; color:#2f6f4f; display:inline-block; font-size:24px; font-weight:800; padding:12px 28px; border-radius:16px;}
+.home-btns{padding:8px 24px 24px;}
+.streak-strip{
+  margin:22px 24px 0; background:#fff; border:2px solid #eee; border-radius:20px;
+  padding:16px 20px; font-size:22px; color:#444; display:flex; align-items:center; gap:12px;
+}
+/* ---------- 課堂 ---------- */
+.lesson-body{padding:10px 24px 30px; flex:1;}
+.step-pill{font-size:20px; color:#2f6f4f; font-weight:700; background:#e5f2ea; display:inline-block; padding:6px 18px; border-radius:14px; margin-bottom:14px;}
+.lesson-body h3{font-size:30px; line-height:1.4; color:#1c1c1e; margin-bottom:14px;}
+.lesson-body .talk{font-size:24px; line-height:1.65; color:#333; margin-bottom:12px;}
+.demo-box{
+  margin:20px 0; background:#fff; border:2.5px dashed #b7cfc2; border-radius:20px;
+  padding:22px; font-size:22px; color:#333; line-height:1.6;
+}
+.bubble-user{background:#dcf3e6; border-radius:16px; padding:14px 16px; margin-bottom:12px; font-size:22px; white-space:pre-line;}
+.bubble-ai{background:#f0f0f0; border-radius:16px; padding:14px 16px; font-size:22px; white-space:pre-line;}
+.listen-btn{background:#fff; color:#2f6f4f; border:2.5px solid #2f6f4f;}
+.next-btn{background:#2f6f4f; color:#fff; justify-content:center; text-align:center;}
+.quiz-opt{background:#fff; color:#1c1c1e; border:2.5px solid #ddd;}
+.quiz-opt.correct{background:#e5f2ea; border-color:#2f6f4f; color:#2f6f4f;}
+.quiz-opt.wrong{background:#fdecec; border-color:#d9534f; color:#d9534f;}
+.quiz-feedback{font-size:24px; font-weight:700; margin-top:18px;}
+/* ---------- 進度 ---------- */
+.prog-card{margin:16px 24px 0; background:#fff; border-radius:22px; border:2px solid #eee; padding:22px;}
+.prog-card h4{font-size:24px; color:#1c1c1e; margin-bottom:12px;}
+.prog-bar{height:26px; background:#eee; border-radius:13px; overflow:hidden;}
+.prog-bar>div{height:100%; background:#2f6f4f; border-radius:13px;}
+.prog-num{font-size:22px; color:#555; margin-top:10px;}
+.badges{display:flex; gap:14px; margin-top:6px; flex-wrap:wrap;}
+.badge{width:86px; text-align:center; font-size:17px; color:#444;}
+.badge .b-ico{font-size:44px; background:#fdf4dd; border-radius:50%; width:74px; height:74px; display:flex; align-items:center; justify-content:center; margin:0 auto 6px;}
+.badge.locked .b-ico{background:#f0f0f0; filter:grayscale(1); opacity:.45;}
+/* ---------- 家人 ---------- */
+.fam-card{margin:16px 24px 0; background:#fff; border-radius:22px; border:2px solid #eee; padding:22px; font-size:22px; line-height:1.6; color:#333;}
+.toggle-row{display:flex; justify-content:space-between; align-items:center; font-size:23px; color:#1c1c1e; padding:6px 0;}
+.toggle{width:70px; height:40px; border-radius:20px; position:relative; cursor:pointer; flex-shrink:0; border:none;}
+.toggle::after{content:""; position:absolute; top:4px; right:4px; width:32px; height:32px; background:#fff; border-radius:50%;}
+/* ---------- 底部導航 ---------- */
+.navbar{
+  display:flex; background:#fff; border-top:2px solid #e5e5e5; flex-shrink:0;
+}
+.nav-item{
+  flex:1; border:none; background:none; padding:14px 4px 20px; cursor:pointer;
+  font-size:19px; color:#8a8a8a; font-weight:700; min-height:60px;
+}
+.nav-item .n-ico{display:block; font-size:34px; margin-bottom:4px;}
+.nav-item.on{color:#2f6f4f;}
