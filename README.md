@@ -58,10 +58,12 @@ Stephanie 嘅電腦本機路徑：`~/Desktop/Stephanie-Google Drive/dev/`
 - 本機已做：`git init`（HEAD → `refs/heads/main`）、`git remote add origin`、
   複製 `stephanie-personal/scripts/github_push.py` 落 `scripts/`、
   `.env`（`GITHUB_TOKEN` 同 `stephanie-personal` 用返同一個 PAT，`.gitignore` 已包 `.env`）
-- 已加入 `~/.../stephanie-personal/scripts/autopush-registry.txt`，
-  之後 launchd daemon（每 120 秒）／`push-now.command` 會自動一齊 push
-- ⚠️ 未喺呢個 session 驗證過真正 push 成功（sandbox 冇網絡出到 GitHub API 驗），
-  首次要 Stephanie 手動雙擊 `push-now.command` 確認一次，或者等 daemon 下個 120 秒週期
+- 已加入 `~/.../stephanie-personal/scripts/autopush-registry.txt`
+- ⚠️ **冇背景 daemon**（2026-07-16 起，已拆除）：Cowork 改完 → 經 `desktop-commander` MCP 喺真 Mac 直接跑
+  `python3 scripts/github_push.py "msg"` 即刻推；desktop-commander 唔通先雙擊 `push-now.command`
+  （sweep 全部已註冊 repo）。裝機步驟正本 → `stephanie-personal/docs/PUSH-SETUP.md`
+- ⚠️ 未喺呢個 session 驗證過真正 push 成功 → 首次要用 GitHub API 核實 HEAD commit 時間
+  （private repo 記得帶 `Authorization: Bearer $GITHUB_TOKEN`，否則假 404），唔准假設推咗
 
 **呢套係全域 SOP，每次開新 project／要 push GitHub 都跟返呢個做法**（詳細步驟見上面呢段）。
 
