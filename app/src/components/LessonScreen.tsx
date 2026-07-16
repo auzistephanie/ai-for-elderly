@@ -70,7 +70,7 @@ export function LessonScreen({ lesson, onComplete }: LessonScreenProps) {
                   className={`bigbtn quiz-opt${stateClass}`}
                   onClick={() => setSelectedOption(i)}
                 >
-                  <span className="ico">{opt.correct ? '✅' : '❌'}</span>
+                  <span className="ico">{isSelected ? (opt.correct ? '✅' : '❌') : '⬜'}</span>
                   <span>{opt.text}</span>
                 </button>
               );

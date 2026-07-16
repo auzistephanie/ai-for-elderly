@@ -30,4 +30,17 @@ describe('LessonScreen', () => {
     await userEvent.click(screen.getByText('完成課堂 🎉'));
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
+
+  it('does not reveal the correct/wrong icon before an option is clicked', async () => {
+    const onComplete = vi.fn();
+    render(<LessonScreen lesson={seedLesson} onComplete={onComplete} />);
+
+    await userEvent.click(screen.getByText('下一步 ▶'));
+    await userEvent.click(screen.getByText('下一步 ▶'));
+
+    // Quiz step is visible, but no option has been clicked yet.
+    expect(screen.getByText('AI 話你知藥物資料之後，你應該——')).toBeInTheDocument();
+    expect(screen.queryByText('✅')).not.toBeInTheDocument();
+    expect(screen.queryByText('❌')).not.toBeInTheDocument();
+  });
 });
