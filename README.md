@@ -69,8 +69,9 @@ Stephanie 嘅電腦本機路徑：`~/Desktop/Stephanie-Google Drive/dev/`
 
 ## 下一步（未做）
 
-1. **起 MVP**：開新 repo，放入 `AI-elder-app-SPEC.md` + `ai-elder-app-mockup.html`，
-   喺 Claude Code CLI 叫佢用 superpowers brainstorm/plan flow 建置。
+1. ~~起 MVP：開新 repo，放入...~~ ✅ Plan 1（walking skeleton）已完成，喺 `app/`。
+   下一步：Plan 2（Supabase 後端 + 電話 OTP 登入）— 見
+   `docs/superpowers/plans/2026-07-16-mvp-walking-skeleton.md` 頂部嘅 5-plan roadmap。
 2. **Deploy landing page**：揀 domain，換走 placeholder（footer email、CTA link、form 後端）。
 3. **確認首次 push**：雙擊 `push-now.command` 或等 daemon 跑一輪，check
    https://github.com/auzistephanie/ai-for-elderly 有冇見到啲檔案。
@@ -83,4 +84,4 @@ Stephanie 嘅電腦本機路徑：`~/Desktop/Stephanie-Google Drive/dev/`
 
 ---
 
-*最後更新：2026-07-12（GitHub auto-push 已裝妥）*
+*最後更新：2026-07-17（Plan 1 walking skeleton 完成）*
