@@ -9,7 +9,7 @@ export interface Badge {
   locked: boolean;
 }
 
-interface ProgressState {
+export interface ProgressState {
   completedLessonIds: string[];
   streakCount: number;
   lastActiveDate: string | null;
@@ -24,7 +24,10 @@ const defaultState: ProgressState = {
 };
 
 export function todayISO(d: Date = new Date()): string {
-  return d.toISOString().slice(0, 10);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 export function calcStreak(lastActiveDate: string | null, today: string, prevCount: number): number {

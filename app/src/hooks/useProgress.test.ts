@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import { calcStreak, computeBadges, useProgress } from './useProgress';
+import { calcStreak, computeBadges, todayISO, useProgress } from './useProgress';
 
 describe('calcStreak', () => {
   it('starts at 1 on the very first visit', () => {
@@ -64,5 +64,62 @@ describe('useProgress', () => {
 
     const second = renderHook(() => useProgress());
     expect(second.result.current.state.familyShareEnabled).toBe(false);
+  });
+});
+
+describe('useProgress mount-time streak update', () => {
+  const STORAGE_KEY = 'ai-elder-progress-v1';
+
+  beforeEach(() => localStorage.clear());
+  afterEach(() => vi.useRealTimers());
+
+  it('sets lastActiveDate to the real local today on mount', () => {
+    const { result } = renderHook(() => useProgress());
+    // Computed via the real todayISO() so this would have caught the
+    // UTC-vs-local-date bug (todayISO used to return yesterday's date
+    // for HKT users between local midnight and 08:00).
+    expect(result.current.state.lastActiveDate).toBe(todayISO());
+  });
+
+  it('increments the streak through the hook when the last active day was yesterday', () => {
+    const fixedNow = new Date(2026, 6, 16, 10, 0, 0);
+    vi.useFakeTimers();
+    vi.setSystemTime(fixedNow);
+
+    const yesterday = todayISO(new Date(2026, 6, 15, 10, 0, 0));
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        completedLessonIds: [],
+        streakCount: 3,
+        lastActiveDate: yesterday,
+        familyShareEnabled: true,
+      }),
+    );
+
+    const { result } = renderHook(() => useProgress());
+    expect(result.current.state.lastActiveDate).toBe(todayISO(fixedNow));
+    expect(result.current.state.streakCount).toBe(4);
+  });
+
+  it('resets the streak through the hook when a day was skipped', () => {
+    const fixedNow = new Date(2026, 6, 16, 10, 0, 0);
+    vi.useFakeTimers();
+    vi.setSystemTime(fixedNow);
+
+    const longAgo = todayISO(new Date(2026, 6, 10, 10, 0, 0));
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        completedLessonIds: [],
+        streakCount: 5,
+        lastActiveDate: longAgo,
+        familyShareEnabled: true,
+      }),
+    );
+
+    const { result } = renderHook(() => useProgress());
+    expect(result.current.state.lastActiveDate).toBe(todayISO(fixedNow));
+    expect(result.current.state.streakCount).toBe(1);
   });
 });
