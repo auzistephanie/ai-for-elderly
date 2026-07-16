@@ -78,7 +78,7 @@ body {
 }
 .nav-item{
   flex:1; border:none; background:none; padding:14px 4px 20px; cursor:pointer;
-  font-size:19px; color:#8a8a8a; font-weight:700; min-height:60px;
+  font-size:22px; color:#8a8a8a; font-weight:700; min-height:60px;
 }
 .nav-item .n-ico{display:block; font-size:34px; margin-bottom:4px;}
 .nav-item.on{color:#2f6f4f;}
