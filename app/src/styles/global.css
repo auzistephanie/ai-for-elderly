@@ -64,7 +64,7 @@ body {
 .prog-bar>div{height:100%; background:#2f6f4f; border-radius:13px;}
 .prog-num{font-size:22px; color:#555; margin-top:10px;}
 .badges{display:flex; gap:14px; margin-top:6px; flex-wrap:wrap;}
-.badge{width:86px; text-align:center; font-size:17px; color:#444;}
+.badge{width:86px; text-align:center; font-size:22px; line-height:1.25; color:#444;}
 .badge .b-ico{font-size:44px; background:#fdf4dd; border-radius:50%; width:74px; height:74px; display:flex; align-items:center; justify-content:center; margin:0 auto 6px;}
 .badge.locked .b-ico{background:#f0f0f0; filter:grayscale(1); opacity:.45;}
 /* ---------- 家人 ---------- */
