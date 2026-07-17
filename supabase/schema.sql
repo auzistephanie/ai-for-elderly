@@ -67,6 +67,26 @@ create policy "elder_profiles_family_read"
     )
   );
 
+-- Symmetric counterpart, added during Plan 4 Task 9 end-to-end verification: an elder needs to
+-- read a LINKED family member's display_name too (elder_family_comments' fetchComments() joins
+-- against elder_profiles to resolve comment authors' names) — without this, the elder-side
+-- comment list silently fell back to the generic "家人" label instead of the real name, even
+-- though the family member's own view correctly showed it (that direction was already covered
+-- by ensureProfile always being able to read/write its own row). No family_share_enabled gate
+-- here: that flag only governs an ELDER's progress-sharing opt-out, not a family member's own
+-- name visibility — a family member who has actively paired with an elder has no comparable
+-- "hide my name" toggle, by design.
+create policy "elder_profiles_elder_read_family"
+  on public.elder_profiles for select
+  using (
+    role = 'family'
+    and exists (
+      select 1 from public.elder_family_links l
+      where l.family_user_id = elder_profiles.user_id
+        and l.elder_user_id = auth.uid()
+    )
+  );
+
 -- Lesson content (replaces the hardcoded seed lesson file).
 create table public.elder_lessons (
   id text primary key,
