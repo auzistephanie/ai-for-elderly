@@ -33,7 +33,7 @@ export interface QuizStep {
 
 export interface Lesson {
   id: string;
-  layer: 1 | 2 | 3;
+  layer: 0 | 1 | 2 | 3;
   number: number;
   title: string;
   subtitle: string;
