@@ -84,6 +84,18 @@ Stephanie 嘅電腦本機路徑：`~/Desktop/Stephanie-Google Drive/dev/`
    DeepSeek 生成課堂 draft 嘅管道，同埋 Stephanie 人手 approve 用嘅 Streamlit admin 工具都已出街；
    `lesson-001` 搬咗去佢啱嘅 tier。內容審批完全由 Stephanie 自己一課一課 approve，
    唔會全自動出街。詳細計劃見 `docs/superpowers/plans/2026-07-17-plan3-content-pipeline.md`。
+   ✅ Plan 4（家人同行功能 polish）已完成 —
+   補返 display name 缺口（長者、家人登入時都要打自己個名，唔再靠 `elder_profiles.display_name`
+   長期得 `null`）；加咗家人留言鼓勵功能（一個長者一條共享留言 feed，任何已配對＋已開分享嘅
+   家人都睇到全部留言，唔係一人一條 private thread；淨長者可以幫每條留言按 ❤️）；
+   配對碼加咗倒數計時＋一鍵重新產生。Live walkthrough（6 步全走一次）揪出一個單元測試冚唔到嘅
+   真 bug：家人喺長者畫面度嘅留言，作者名一直顯示做 generic「家人」字眼，而唔係佢個真名 ——
+   root cause 係 `elder_profiles` RLS 淨得 `elder_profiles_family_read`（家人讀長者），
+   冇對稱嘅 policy 俾長者讀已配對家人嗰邊嘅 `display_name`。加咗新 policy
+   `elder_profiles_elder_read_family` 之後，Task 9 重新做多次 live walkthrough 確認長者畫面
+   已經正確顯示返家人真名，而且冇影響返轉頭（家人畫面見長者真名嗰個方向本身冇壞過）。
+   單元測試（133 個）、build、lint 三項都保持全綠。詳細計劃見
+   `docs/superpowers/plans/2026-07-18-plan4-family-companion.md`。
 2. **Deploy landing page**：揀 domain，換走 placeholder（footer email、CTA link、form 後端）。
 3. **確認首次 push**：雙擊 `push-now.command` 或等 daemon 跑一輪，check
    https://github.com/auzistephanie/ai-for-elderly 有冇見到啲檔案。
@@ -96,4 +108,4 @@ Stephanie 嘅電腦本機路徑：`~/Desktop/Stephanie-Google Drive/dev/`
 
 ---
 
-*最後更新：2026-07-18（Plan 3 內容管道＋課程引擎 UI 完成，end-to-end 驗證通過）*
+*最後更新：2026-07-18（Plan 4 家人同行功能 polish 完成，end-to-end 驗證通過）*
