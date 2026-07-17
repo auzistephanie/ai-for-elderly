@@ -20,7 +20,8 @@ export function useAuth() {
     let requestId = 0;
 
     async function resolve(userId: string) {
-      const myRequestId = ++requestId;
+      requestId += 1;
+      const myRequestId = requestId;
       const { data } = await supabase
         .from('elder_profiles')
         .select('role')
@@ -30,7 +31,7 @@ export function useAuth() {
       setState({ status: 'signed-in', userId, role: (data?.role as UserRole) ?? null });
     }
 
-    function signOut() {
+    function clearSession() {
       // Invalidate any in-flight resolve() so it can't resurrect a stale session.
       requestId += 1;
       setState({ status: 'signed-out', userId: null, role: null });
@@ -39,13 +40,13 @@ export function useAuth() {
     supabase.auth.getSession().then(({ data: { session } }: { data: { session: { user: { id: string } } | null } }) => {
       if (!active) return;
       if (session?.user) resolve(session.user.id);
-      else signOut();
+      else clearSession();
     });
 
     const { data: sub } = supabase.auth.onAuthStateChange(
       (_event: string, session: { user: { id: string } } | null) => {
         if (session?.user) resolve(session.user.id);
-        else signOut();
+        else clearSession();
       },
     );
 
