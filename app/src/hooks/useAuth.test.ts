@@ -59,9 +59,11 @@ describe('useAuth', () => {
     const select = vi.fn(() => ({ eq }));
     fromMock.mockReturnValue({ select });
 
-    let authStateCallback: ((event: string, session: unknown) => void) | null = null;
+    const authStateCallbackRef: { current: ((event: string, session: unknown) => void) | null } = {
+      current: null,
+    };
     onAuthStateChangeMock.mockImplementation((cb: (event: string, session: unknown) => void) => {
-      authStateCallback = cb;
+      authStateCallbackRef.current = cb;
       return { data: { subscription: { unsubscribe: vi.fn() } } };
     });
 
@@ -71,7 +73,7 @@ describe('useAuth', () => {
     await waitFor(() => expect(fromMock).toHaveBeenCalled());
 
     // A sign-out event arrives while the u1 role fetch is still in flight.
-    authStateCallback?.('SIGNED_OUT', null);
+    authStateCallbackRef.current?.('SIGNED_OUT', null);
     await waitFor(() => expect(result.current.status).toBe('signed-out'));
 
     // The stale u1 role fetch now resolves — it must not resurrect signed-in state.
