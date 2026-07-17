@@ -81,4 +81,54 @@ describe('FamilyScreen', () => {
     render(<FamilyScreen shareEnabled={true} onToggleShare={vi.fn()} userId="u1" />);
     expect(await screen.findByText('仲未有家人留言，快啲叫佢哋嚟支持你啦')).toBeInTheDocument();
   });
+
+  it('shows a countdown after generating a code', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ delay: null });
+    createPairingCodeMock.mockResolvedValue('384920');
+    render(<FamilyScreen shareEnabled={true} onToggleShare={vi.fn()} userId="u1" />);
+
+    await user.click(screen.getByText('產生配對碼'));
+    expect(await screen.findByText('384920')).toBeInTheDocument();
+    expect(screen.getByText('10:00 後過期')).toBeInTheDocument();
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(screen.getByText('9:00 後過期')).toBeInTheDocument();
+
+    vi.useRealTimers();
+  });
+
+  it('shows an expired message and a regenerate button once the countdown reaches zero', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ delay: null });
+    createPairingCodeMock.mockResolvedValue('384920');
+    render(<FamilyScreen shareEnabled={true} onToggleShare={vi.fn()} userId="u1" />);
+
+    await user.click(screen.getByText('產生配對碼'));
+    expect(await screen.findByText('384920')).toBeInTheDocument();
+
+    await vi.advanceTimersByTimeAsync(10 * 60_000);
+    expect(screen.getByText('配對碼已過期')).toBeInTheDocument();
+    expect(screen.queryByText('384920')).not.toBeInTheDocument();
+    expect(screen.getByText('產生新碼')).toBeInTheDocument();
+
+    vi.useRealTimers();
+  });
+
+  it('replaces the current code with a fresh one when 產生新碼 is tapped', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ delay: null });
+    createPairingCodeMock.mockResolvedValueOnce('384920').mockResolvedValueOnce('111222');
+    render(<FamilyScreen shareEnabled={true} onToggleShare={vi.fn()} userId="u1" />);
+
+    await user.click(screen.getByText('產生配對碼'));
+    expect(await screen.findByText('384920')).toBeInTheDocument();
+
+    await user.click(screen.getByText('產生新碼'));
+    expect(await screen.findByText('111222')).toBeInTheDocument();
+    expect(screen.queryByText('384920')).not.toBeInTheDocument();
+    expect(screen.getByText('10:00 後過期')).toBeInTheDocument();
+
+    vi.useRealTimers();
+  });
 });

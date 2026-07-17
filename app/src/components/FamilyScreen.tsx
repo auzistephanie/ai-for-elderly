@@ -3,6 +3,8 @@ import { createPairingCode } from '../lib/family';
 import { fetchComments, likeComment, type FamilyComment } from '../lib/comments';
 import { CommentList } from './CommentList';
 
+const PAIRING_CODE_TTL_SECONDS = 10 * 60;
+
 interface FamilyScreenProps {
   shareEnabled: boolean;
   onToggleShare: (enabled: boolean) => void;
@@ -13,6 +15,8 @@ export function FamilyScreen({ shareEnabled, onToggleShare, userId }: FamilyScre
   const [pairingCode, setPairingCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [codeGeneratedAt, setCodeGeneratedAt] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
 
   const [comments, setComments] = useState<FamilyComment[]>([]);
   const [commentsError, setCommentsError] = useState<string | null>(null);
@@ -32,13 +36,22 @@ export function FamilyScreen({ shareEnabled, onToggleShare, userId }: FamilyScre
     };
   }, [userId]);
 
+  useEffect(() => {
+    if (!pairingCode) return;
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, [pairingCode]);
+
   async function handleGenerateCode() {
     if (busy) return;
     setBusy(true);
     setError(null);
     try {
       const code = await createPairingCode();
+      const generatedAt = Date.now();
       setPairingCode(code);
+      setCodeGeneratedAt(generatedAt);
+      setNow(generatedAt);
     } catch (err) {
       setError(err instanceof Error ? err.message : '攞唔到配對碼，請再試');
     } finally {
@@ -59,6 +72,11 @@ export function FamilyScreen({ shareEnabled, onToggleShare, userId }: FamilyScre
     }
   }
 
+  const secondsElapsed = codeGeneratedAt ? Math.floor((now - codeGeneratedAt) / 1000) : 0;
+  const secondsLeft = Math.max(0, PAIRING_CODE_TTL_SECONDS - secondsElapsed);
+  const isExpired = pairingCode !== null && secondsLeft === 0;
+  const countdownLabel = `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, '0')} 後過期`;
+
   return (
     <div className="screen">
       <div className="topbar">
@@ -78,12 +96,25 @@ export function FamilyScreen({ shareEnabled, onToggleShare, userId }: FamilyScre
       </div>
       {shareEnabled && (
         <div className="fam-card">
-          {pairingCode ? (
+          {pairingCode && !isExpired && (
             <>
               <p>配對碼（俾屋企人 10 分鐘內輸入）：</p>
               <p className="otp-display">{pairingCode}</p>
+              <p>{countdownLabel}</p>
+              <button className="bigbtn" disabled={busy} onClick={handleGenerateCode}>
+                {busy ? '產生緊…' : '產生新碼'}
+              </button>
             </>
-          ) : (
+          )}
+          {pairingCode && isExpired && (
+            <>
+              <p>配對碼已過期</p>
+              <button className="bigbtn" disabled={busy} onClick={handleGenerateCode}>
+                {busy ? '產生緊…' : '產生新碼'}
+              </button>
+            </>
+          )}
+          {!pairingCode && (
             <>
               <button className="bigbtn" disabled={busy} onClick={handleGenerateCode}>
                 {busy ? '產生緊…' : '產生配對碼'}
