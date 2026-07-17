@@ -70,7 +70,9 @@ create policy "elder_profiles_family_read"
 -- Lesson content (replaces the hardcoded seed lesson file).
 create table public.elder_lessons (
   id text primary key,
-  layer smallint not null check (layer in (1, 2, 3)),
+  -- layer 0 is reserved for the standalone 防騙必修班 (anti-fraud) class, which per
+  -- product spec §5.1 is always unlocked regardless of layer-1/2/3 progress.
+  layer smallint not null check (layer in (0, 1, 2, 3)),
   number integer not null,
   title text not null,
   subtitle text not null,
