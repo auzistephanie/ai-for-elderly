@@ -1,6 +1,9 @@
 -- AI老友記 — Supabase schema (shared project cmtubaxlniglklmdwlzs, elder_ prefix)
 -- Applied via the Supabase MCP tool / SQL editor. This file is the committed source of truth;
 -- keep it in sync whenever schema changes are applied live.
+-- Design rationale: docs/superpowers/specs/2026-07-17-plan2-supabase-backend-design.md
+-- (§3 Auth Mechanism, §4 Data Model). Every table is elder_-prefixed because this project
+-- is shared with other apps (novel_*, coach_*, trips, ...) — the prefix avoids name collisions.
 
 create extension if not exists pgcrypto;
 
@@ -74,6 +77,9 @@ create policy "elder_lessons_published_read"
   using (status = 'published');
 
 -- Which user completed which lesson (normalized, not a jsonb array — Plan 5 analytics needs to query this directly).
+-- NOTE: lesson_id has ON DELETE CASCADE — a future admin flow that regenerates content must UPDATE
+-- existing elder_lessons rows in place, never DELETE + re-insert, or every user's completion record
+-- for that lesson silently disappears.
 create table public.elder_lesson_completions (
   user_id uuid not null references auth.users(id) on delete cascade,
   lesson_id text not null references public.elder_lessons(id) on delete cascade,
@@ -96,6 +102,7 @@ create policy "elder_lesson_completions_family_read"
       from public.elder_profiles p
       join public.elder_family_links l on l.elder_user_id = p.user_id
       where p.user_id = elder_lesson_completions.user_id
+        and p.role = 'elder'
         and p.family_share_enabled = true
         and l.family_user_id = auth.uid()
     )
@@ -124,6 +131,7 @@ create policy "elder_streaks_family_read"
       from public.elder_profiles p
       join public.elder_family_links l on l.elder_user_id = p.user_id
       where p.user_id = elder_streaks.user_id
+        and p.role = 'elder'
         and p.family_share_enabled = true
         and l.family_user_id = auth.uid()
     )
