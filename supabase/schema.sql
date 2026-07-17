@@ -195,7 +195,7 @@ begin
 end;
 $$;
 
-revoke all on function public.create_pairing_code() from public;
+revoke all on function public.create_pairing_code() from public, anon, authenticated;
 grant execute on function public.create_pairing_code() to authenticated;
 
 -- Called by an authenticated family member to redeem a pairing code and link to that elder.
@@ -235,7 +235,7 @@ begin
 end;
 $$;
 
-revoke all on function public.redeem_pairing_code(text) from public;
+revoke all on function public.redeem_pairing_code(text) from public, anon, authenticated;
 grant execute on function public.redeem_pairing_code(text) to authenticated;
 
 -- Called by the client (still signed out, mid-login) to read back the OTP the hook just wrote.
