@@ -43,6 +43,12 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
     setBusy(false);
   }
 
+  function handleBackToPhone() {
+    setOtp(null);
+    setError(null);
+    setStep('enter-phone');
+  }
+
   async function handleConfirm() {
     if (busy || !otp || !role) return;
     setBusy(true);
@@ -53,7 +59,13 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
       setBusy(false);
       return;
     }
-    await ensureProfile(role);
+    try {
+      await ensureProfile(role);
+    } catch {
+      setError('登入失敗，請再試一次');
+      setBusy(false);
+      return;
+    }
     setBusy(false);
     onLoggedIn();
   }
@@ -108,11 +120,17 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
       {step === 'confirm-otp' && (
         <div className="fam-card">
           <p>驗證碼：</p>
+          {/* 呢個 app 用自訂 Send SMS Auth Hook 代替真實短訊，所以直接喺畫面度顯示驗證碼係故意噉樣設計，唔係漏咗做保安 — 詳見 Plan 2 設計文件。 */}
           <p className="otp-display">{otp}</p>
           {error && <p className="error-text">{error}</p>}
           <button className="bigbtn" disabled={busy} onClick={handleConfirm}>
             {busy ? '確認緊…' : '確認登入'}
           </button>
+          {error && (
+            <button className="bigbtn" onClick={handleBackToPhone}>
+              撳呢度返去重新輸入電話
+            </button>
+          )}
         </div>
       )}
     </div>

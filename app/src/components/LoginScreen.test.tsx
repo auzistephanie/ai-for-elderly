@@ -51,4 +51,27 @@ describe('LoginScreen', () => {
 
     expect(await screen.findByText('傳送失敗，check 下電話號碼啱唔啱')).toBeInTheDocument();
   });
+
+  it('recovers when ensureProfile throws after a successful verifyOtp', async () => {
+    requestOtpMock.mockResolvedValue({ error: null });
+    fetchDisplayedOtpMock.mockResolvedValue('561166');
+    verifyOtpMock.mockResolvedValue({ error: null });
+    ensureProfileMock.mockRejectedValue(new Error('boom'));
+
+    const onLoggedIn = vi.fn();
+    render(<LoginScreen onLoggedIn={onLoggedIn} />);
+
+    await userEvent.click(screen.getByText('我係長者'));
+    await userEvent.type(screen.getByPlaceholderText('912345678'), '91234567');
+    await userEvent.click(screen.getByText('傳送驗證碼'));
+
+    expect(await screen.findByText('561166')).toBeInTheDocument();
+
+    const confirmBtn = screen.getByText('確認登入');
+    await userEvent.click(confirmBtn);
+
+    expect(await screen.findByText('登入失敗，請再試一次')).toBeInTheDocument();
+    expect(onLoggedIn).not.toHaveBeenCalled();
+    expect(confirmBtn).not.toBeDisabled();
+  });
 });
