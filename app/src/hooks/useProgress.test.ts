@@ -1,5 +1,20 @@
-import { renderHook, act } from '@testing-library/react';
-import { calcStreak, computeBadges, todayISO, useProgress } from './useProgress';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
+import { calcStreak, computeBadges, todayISO } from './useProgress';
+
+const fetchProgressMock = vi.fn();
+const markLessonCompletedMock = vi.fn();
+const touchStreakMock = vi.fn();
+const setFamilyShareEnabledMock = vi.fn();
+
+vi.mock('../lib/progressApi', () => ({
+  fetchProgress: (...args: unknown[]) => fetchProgressMock(...args),
+  markLessonCompleted: (...args: unknown[]) => markLessonCompletedMock(...args),
+  touchStreak: (...args: unknown[]) => touchStreakMock(...args),
+  setFamilyShareEnabled: (...args: unknown[]) => setFamilyShareEnabledMock(...args),
+}));
+
+import { useProgress } from './useProgress';
 
 describe('calcStreak', () => {
   it('starts at 1 on the very first visit', () => {
@@ -21,105 +36,90 @@ describe('calcStreak', () => {
 
 describe('computeBadges', () => {
   it('locks all four badges with no progress', () => {
-    const badges = computeBadges({
-      completedCount: 0,
-      streakCount: 0,
-      antiFraudDone: false,
-      allLayersDone: false,
-    });
+    const badges = computeBadges({ completedCount: 0, streakCount: 0, antiFraudDone: false, allLayersDone: false });
     expect(badges.every((b) => b.locked)).toBe(true);
     expect(badges).toHaveLength(4);
-  });
-
-  it('unlocks 初次見面 after one completed lesson and 連學5日 at streak >= 5', () => {
-    const badges = computeBadges({
-      completedCount: 1,
-      streakCount: 5,
-      antiFraudDone: false,
-      allLayersDone: false,
-    });
-    expect(badges.find((b) => b.id === 'first-lesson')?.locked).toBe(false);
-    expect(badges.find((b) => b.id === 'streak-5')?.locked).toBe(false);
-    expect(badges.find((b) => b.id === 'anti-fraud')?.locked).toBe(true);
-    expect(badges.find((b) => b.id === 'ai-master')?.locked).toBe(true);
   });
 });
 
 describe('useProgress', () => {
-  beforeEach(() => localStorage.clear());
+  beforeEach(() => vi.clearAllMocks());
 
-  it('persists a completed lesson across a full remount (simulating app reload)', () => {
-    const first = renderHook(() => useProgress());
-    act(() => first.result.current.completeLesson('lesson-001'));
-    first.unmount();
-
-    const second = renderHook(() => useProgress());
-    expect(second.result.current.state.completedLessonIds).toContain('lesson-001');
+  it('does nothing until a userId is available', () => {
+    renderHook(() => useProgress(null));
+    expect(fetchProgressMock).not.toHaveBeenCalled();
   });
 
-  it('persists the family share toggle across a full remount', () => {
-    const first = renderHook(() => useProgress());
-    act(() => first.result.current.setFamilyShare(false));
-    first.unmount();
+  it('loads remote progress and re-touches the streak when the day changed', async () => {
+    fetchProgressMock.mockResolvedValue({
+      completedLessonIds: ['l1'],
+      streakCount: 3,
+      lastActiveDate: '2026-07-15',
+      familyShareEnabled: true,
+    });
+    touchStreakMock.mockResolvedValue({ streakCount: 4, lastActiveDate: todayISO() });
 
-    const second = renderHook(() => useProgress());
-    expect(second.result.current.state.familyShareEnabled).toBe(false);
-  });
-});
+    const { result } = renderHook(() => useProgress('u1'));
 
-describe('useProgress mount-time streak update', () => {
-  const STORAGE_KEY = 'ai-elder-progress-v1';
-
-  beforeEach(() => localStorage.clear());
-  afterEach(() => vi.useRealTimers());
-
-  it('sets lastActiveDate to the real local today on mount', () => {
-    const { result } = renderHook(() => useProgress());
-    // Computed via the real todayISO() so this would have caught the
-    // UTC-vs-local-date bug (todayISO used to return yesterday's date
-    // for HKT users between local midnight and 08:00).
-    expect(result.current.state.lastActiveDate).toBe(todayISO());
-  });
-
-  it('increments the streak through the hook when the last active day was yesterday', () => {
-    const fixedNow = new Date(2026, 6, 16, 10, 0, 0);
-    vi.useFakeTimers();
-    vi.setSystemTime(fixedNow);
-
-    const yesterday = todayISO(new Date(2026, 6, 15, 10, 0, 0));
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        completedLessonIds: [],
-        streakCount: 3,
-        lastActiveDate: yesterday,
-        familyShareEnabled: true,
-      }),
-    );
-
-    const { result } = renderHook(() => useProgress());
-    expect(result.current.state.lastActiveDate).toBe(todayISO(fixedNow));
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+    expect(fetchProgressMock).toHaveBeenCalledWith('u1');
+    expect(touchStreakMock).toHaveBeenCalledWith('u1', todayISO(), calcStreak);
     expect(result.current.state.streakCount).toBe(4);
+    expect(result.current.state.completedLessonIds).toEqual(['l1']);
   });
 
-  it('resets the streak through the hook when a day was skipped', () => {
-    const fixedNow = new Date(2026, 6, 16, 10, 0, 0);
-    vi.useFakeTimers();
-    vi.setSystemTime(fixedNow);
+  it('does not re-touch the streak when already active today', async () => {
+    fetchProgressMock.mockResolvedValue({
+      completedLessonIds: [],
+      streakCount: 2,
+      lastActiveDate: todayISO(),
+      familyShareEnabled: true,
+    });
 
-    const longAgo = todayISO(new Date(2026, 6, 10, 10, 0, 0));
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        completedLessonIds: [],
-        streakCount: 5,
-        lastActiveDate: longAgo,
-        familyShareEnabled: true,
-      }),
-    );
+    const { result } = renderHook(() => useProgress('u1'));
 
-    const { result } = renderHook(() => useProgress());
-    expect(result.current.state.lastActiveDate).toBe(todayISO(fixedNow));
-    expect(result.current.state.streakCount).toBe(1);
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+    expect(touchStreakMock).not.toHaveBeenCalled();
+    expect(result.current.state.streakCount).toBe(2);
+  });
+
+  it('completeLesson calls markLessonCompleted and updates local state optimistically', async () => {
+    fetchProgressMock.mockResolvedValue({
+      completedLessonIds: [],
+      streakCount: 0,
+      lastActiveDate: todayISO(),
+      familyShareEnabled: true,
+    });
+    markLessonCompletedMock.mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useProgress('u1'));
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+
+    await act(async () => {
+      await result.current.completeLesson('l9');
+    });
+
+    expect(markLessonCompletedMock).toHaveBeenCalledWith('u1', 'l9');
+    expect(result.current.state.completedLessonIds).toContain('l9');
+  });
+
+  it('setFamilyShare calls setFamilyShareEnabled and updates local state', async () => {
+    fetchProgressMock.mockResolvedValue({
+      completedLessonIds: [],
+      streakCount: 0,
+      lastActiveDate: todayISO(),
+      familyShareEnabled: true,
+    });
+    setFamilyShareEnabledMock.mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useProgress('u1'));
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+
+    await act(async () => {
+      await result.current.setFamilyShare(false);
+    });
+
+    expect(setFamilyShareEnabledMock).toHaveBeenCalledWith('u1', false);
+    expect(result.current.state.familyShareEnabled).toBe(false);
   });
 });

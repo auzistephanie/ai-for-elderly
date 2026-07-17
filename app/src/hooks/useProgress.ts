@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-
-const STORAGE_KEY = 'ai-elder-progress-v1';
+import { fetchProgress, markLessonCompleted, setFamilyShareEnabled, touchStreak } from '../lib/progressApi';
 
 export interface Badge {
   id: string;
@@ -53,52 +52,49 @@ export function computeBadges(state: {
   ];
 }
 
-function loadState(): ProgressState {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? { ...defaultState, ...JSON.parse(raw) } : defaultState;
-  } catch {
-    return defaultState;
-  }
-}
-
-function saveState(state: ProgressState) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
-
-export function useProgress() {
-  const [state, setState] = useState<ProgressState>(loadState);
+export function useProgress(userId: string | null) {
+  const [state, setState] = useState<ProgressState>(defaultState);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const today = todayISO();
-    setState((prev) => {
-      if (prev.lastActiveDate === today) return prev;
-      const next = {
-        ...prev,
-        streakCount: calcStreak(prev.lastActiveDate, today, prev.streakCount),
-        lastActiveDate: today,
-      };
-      saveState(next);
-      return next;
-    });
-  }, []);
+    if (!userId) return;
+    let active = true;
 
-  const completeLesson = useCallback((lessonId: string) => {
-    setState((prev) => {
-      if (prev.completedLessonIds.includes(lessonId)) return prev;
-      const next = { ...prev, completedLessonIds: [...prev.completedLessonIds, lessonId] };
-      saveState(next);
-      return next;
-    });
-  }, []);
+    (async () => {
+      const remote = await fetchProgress(userId);
+      const today = todayISO();
+      let next = remote;
+      if (remote.lastActiveDate !== today) {
+        const touched = await touchStreak(userId, today, calcStreak);
+        next = { ...remote, streakCount: touched.streakCount, lastActiveDate: touched.lastActiveDate };
+      }
+      if (!active) return;
+      setState(next);
+      setLoaded(true);
+    })();
 
-  const setFamilyShare = useCallback((enabled: boolean) => {
-    setState((prev) => {
-      const next = { ...prev, familyShareEnabled: enabled };
-      saveState(next);
-      return next;
-    });
-  }, []);
+    return () => {
+      active = false;
+    };
+  }, [userId]);
 
-  return { state, completeLesson, setFamilyShare };
+  const completeLesson = useCallback(
+    async (lessonId: string) => {
+      if (!userId || state.completedLessonIds.includes(lessonId)) return;
+      await markLessonCompleted(userId, lessonId);
+      setState((prev) => ({ ...prev, completedLessonIds: [...prev.completedLessonIds, lessonId] }));
+    },
+    [userId, state.completedLessonIds],
+  );
+
+  const setFamilyShare = useCallback(
+    async (enabled: boolean) => {
+      if (!userId) return;
+      await setFamilyShareEnabled(userId, enabled);
+      setState((prev) => ({ ...prev, familyShareEnabled: enabled }));
+    },
+    [userId],
+  );
+
+  return { state, loaded, completeLesson, setFamilyShare };
 }
