@@ -57,4 +57,41 @@ describe('useLessons', () => {
     expect(result.current.error).toBe('network down');
     expect(result.current.lessons).toEqual([]);
   });
+
+  it('reload() re-invokes the Supabase query in isolation (no remount needed)', async () => {
+    let callCount = 0;
+    const makeChain = (data: unknown) => {
+      const then = (cb: (result: { data: unknown; error: unknown }) => void) => cb({ data, error: null });
+      const order2 = vi.fn(() => ({ then }));
+      const order1 = vi.fn(() => ({ order: order2 }));
+      const eq = vi.fn(() => ({ order: order1 }));
+      const select = vi.fn(() => ({ eq }));
+      return { select };
+    };
+
+    fromMock.mockImplementation(() => {
+      callCount += 1;
+      return callCount === 1
+        ? makeChain([])
+        : makeChain([
+            {
+              id: 'lesson-002',
+              layer: 1,
+              number: 1,
+              title: 'T',
+              subtitle: 'S',
+              steps: [],
+            },
+          ]);
+    });
+
+    const { result } = renderHook(() => useLessons());
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+    expect(result.current.lessons).toHaveLength(0);
+
+    result.current.reload();
+
+    await waitFor(() => expect(result.current.lessons).toHaveLength(1));
+    expect(fromMock).toHaveBeenCalledTimes(2);
+  });
 });

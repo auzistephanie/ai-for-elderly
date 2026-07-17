@@ -72,4 +72,31 @@ describe('fetchFamilyLink', () => {
 
     expect(await fetchFamilyLink('fam1')).toEqual({ elderUserId: 'e1', elderDisplayName: '陳生' });
   });
+
+  it('throws (does not silently return null) when the link lookup query errors', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'network down' } });
+    const eq = vi.fn(() => ({ maybeSingle }));
+    const select = vi.fn(() => ({ eq }));
+    fromMock.mockReturnValue({ select });
+
+    await expect(fetchFamilyLink('fam1')).rejects.toThrow('network down');
+  });
+
+  it('throws (does not silently return null) when the elder-profile lookup query errors', async () => {
+    const linkMaybeSingle = vi.fn().mockResolvedValue({ data: { elder_user_id: 'e1' }, error: null });
+    const linkEq = vi.fn(() => ({ maybeSingle: linkMaybeSingle }));
+    const linkSelect = vi.fn(() => ({ eq: linkEq }));
+
+    const profileMaybeSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'profile lookup failed' } });
+    const profileEq = vi.fn(() => ({ maybeSingle: profileMaybeSingle }));
+    const profileSelect = vi.fn(() => ({ eq: profileEq }));
+
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'elder_family_links') return { select: linkSelect };
+      if (table === 'elder_profiles') return { select: profileSelect };
+      throw new Error(`unexpected table ${table}`);
+    });
+
+    await expect(fetchFamilyLink('fam1')).rejects.toThrow('profile lookup failed');
+  });
 });

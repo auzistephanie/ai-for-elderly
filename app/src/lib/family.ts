@@ -1,9 +1,10 @@
 import { supabase } from './supabaseClient';
 
-// All three functions below throw on failure — callers (PairingScreen.tsx, FamilyScreen.tsx)
-// must wrap calls in try/catch. The one exception is fetchFamilyLink, which returns null for
-// BOTH "not paired yet" and "query error" rather than throwing, since a missing link is an
-// expected steady state, not a failure.
+// All three functions below throw on failure — callers (PairingScreen.tsx, FamilyScreen.tsx,
+// FamilyFlow in App.tsx) must wrap calls in try/catch or .catch(). fetchFamilyLink returns null
+// only for the genuine "not paired yet" steady state (no row in elder_family_links) — a query
+// error on either of its two lookups throws instead, so callers can tell "not paired" apart from
+// "couldn't check" and don't misreport a real DB/network failure as an invitation to re-pair.
 
 export async function createPairingCode(): Promise<string> {
   const { data, error } = await supabase.rpc('create_pairing_code');
@@ -30,18 +31,20 @@ export async function redeemPairingCode(
 export async function fetchFamilyLink(
   familyUserId: string,
 ): Promise<{ elderUserId: string; elderDisplayName: string | null } | null> {
-  const { data: link } = await supabase
+  const { data: link, error: linkError } = await supabase
     .from('elder_family_links')
     .select('elder_user_id')
     .eq('family_user_id', familyUserId)
     .maybeSingle();
+  if (linkError) throw new Error(linkError.message ?? '攞唔到配對狀態，請再試');
   if (!link) return null;
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('elder_profiles')
     .select('display_name')
     .eq('user_id', link.elder_user_id)
     .maybeSingle();
+  if (profileError) throw new Error(profileError.message ?? '攞唔到長者資料，請再試');
 
   return { elderUserId: link.elder_user_id, elderDisplayName: profile?.display_name ?? null };
 }

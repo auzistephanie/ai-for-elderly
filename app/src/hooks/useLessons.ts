@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import type { Lesson } from '../types/lesson';
 
@@ -6,6 +6,10 @@ export function useLessons() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Bumped by reload() to re-run the effect below in isolation — this must stay local to this
+  // hook (not a `key` remount at the call site) so retrying a failed lessons fetch never
+  // disturbs sibling state such as useProgress's streak/completion data.
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -27,7 +31,9 @@ export function useLessons() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [reloadToken]);
 
-  return { lessons, loaded, error };
+  const reload = useCallback(() => setReloadToken((n) => n + 1), []);
+
+  return { lessons, loaded, error, reload };
 }

@@ -13,26 +13,23 @@ import { useProgress, computeBadges } from './hooks/useProgress';
 import { fetchFamilyLink } from './lib/family';
 import type { ScreenName } from './types/screen';
 
-interface ElderShellProps {
-  userId: string;
-  onRetryLessons: () => void;
-}
-
-function ElderShell({ userId, onRetryLessons }: ElderShellProps) {
+function ElderShell({ userId }: { userId: string }) {
   const [screen, setScreen] = useState<ScreenName>('home');
-  const { lessons, loaded: lessonsLoaded, error: lessonsError } = useLessons();
+  const { lessons, loaded: lessonsLoaded, error: lessonsError, reload: reloadLessons } = useLessons();
   const { state, completeLesson, setFamilyShare } = useProgress(userId);
 
   // A fetch failure is distinct from "genuinely zero lessons" (see useLessons) and must not
   // be swallowed into a silent blank/empty-state screen — surface it with the same
-  // error+retry affordance used elsewhere (e.g. FamilyProgressView).
+  // error+retry affordance used elsewhere (e.g. FamilyProgressView). Retrying calls useLessons'
+  // own reload() rather than remounting ElderShell, so useProgress's streak/completion state
+  // (which had nothing to do with the failure) is left completely undisturbed.
   if (lessonsError) {
     return (
       <div className="app">
         <div className="screen">
           <div className="fam-card">
             <p className="error-text">攞唔到課堂內容：{lessonsError}</p>
-            <button className="bigbtn" onClick={onRetryLessons}>
+            <button className="bigbtn" onClick={reloadLessons}>
               再試一次
             </button>
           </div>
@@ -147,7 +144,6 @@ function FamilyFlow({ userId }: { userId: string }) {
 
 export function App() {
   const auth = useAuth();
-  const [elderRetryKey, setElderRetryKey] = useState(0);
 
   if (auth.status === 'loading') return <div className="app" />;
 
@@ -165,13 +161,26 @@ export function App() {
     );
   }
 
+  // A signed-in session with role: null means elder_profiles has no row (or no role) for this
+  // user — e.g. ensureProfile() never ran, or its insert failed at the DB level. Falling through
+  // silently would guess "elder" and hand a family member (or nobody at all) the elder shell, so
+  // it gets its own explicit error+retry state instead.
+  if (auth.role === null) {
+    return (
+      <div className="app">
+        <div className="screen">
+          <div className="fam-card">
+            <p className="error-text">攞唔到你嘅身份資料，請再試</p>
+            <button className="bigbtn" onClick={() => window.location.reload()}>
+              再試一次
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (auth.role === 'family') return <FamilyFlow userId={auth.userId as string} />;
 
-  return (
-    <ElderShell
-      key={elderRetryKey}
-      userId={auth.userId as string}
-      onRetryLessons={() => setElderRetryKey((k) => k + 1)}
-    />
-  );
+  return <ElderShell userId={auth.userId as string} />;
 }

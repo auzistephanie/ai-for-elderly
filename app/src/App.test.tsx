@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 
 const useAuthMock = vi.fn();
@@ -21,6 +22,13 @@ vi.mock('./lib/family', () => ({
   fetchFamilyLink: (...args: unknown[]) => fetchFamilyLinkMock(...args),
   createPairingCode: vi.fn(),
   redeemPairingCode: vi.fn(),
+}));
+
+// FamilyProgressView (rendered for an already-linked family account) fetches progress itself via
+// lib/progressApi — mock it here too so that branch doesn't hit the real Supabase client.
+const fetchProgressMock = vi.fn();
+vi.mock('./lib/progressApi', () => ({
+  fetchProgress: (...args: unknown[]) => fetchProgressMock(...args),
 }));
 
 import { App } from './App';
@@ -91,5 +99,77 @@ describe('App auth gate', () => {
 
     render(<App />);
     await waitFor(() => expect(screen.getByText('輸入配對碼')).toBeInTheDocument());
+  });
+
+  it('shows an error+retry message when useLessons fails, and retry calls reload() (not a full remount)', async () => {
+    useAuthMock.mockReturnValue({ status: 'signed-in', userId: 'u1', role: 'elder' });
+    const reloadMock = vi.fn();
+    useLessonsMock.mockReturnValue({ lessons: [], loaded: true, error: '網絡有問題', reload: reloadMock });
+    useProgressMock.mockReturnValue({
+      state: { completedLessonIds: [], streakCount: 0, lastActiveDate: null, familyShareEnabled: true },
+      loaded: true,
+      completeLesson: vi.fn(),
+      setFamilyShare: vi.fn(),
+    });
+
+    render(<App />);
+    expect(screen.getByText(/攞唔到課堂內容/)).toBeInTheDocument();
+    await userEvent.click(screen.getByText('再試一次'));
+    expect(reloadMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows an error+retry message when fetchFamilyLink rejects, and retry re-invokes it', async () => {
+    useAuthMock.mockReturnValue({ status: 'signed-in', userId: 'fam1', role: 'family' });
+    useLessonsMock.mockReturnValue({ lessons: [], loaded: true, error: null, reload: vi.fn() });
+    useProgressMock.mockReturnValue({
+      state: { completedLessonIds: [], streakCount: 0, lastActiveDate: null, familyShareEnabled: true },
+      loaded: false,
+      completeLesson: vi.fn(),
+      setFamilyShare: vi.fn(),
+    });
+    fetchFamilyLinkMock.mockRejectedValueOnce(new Error('網絡逾時'));
+    fetchFamilyLinkMock.mockResolvedValueOnce(null);
+
+    render(<App />);
+    await waitFor(() => expect(screen.getByText(/網絡逾時/)).toBeInTheDocument());
+    await userEvent.click(screen.getByText('再試一次'));
+    await waitFor(() => expect(screen.getByText('輸入配對碼')).toBeInTheDocument());
+    expect(fetchFamilyLinkMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows FamilyProgressView for a signed-in family account that already has a link', async () => {
+    useAuthMock.mockReturnValue({ status: 'signed-in', userId: 'fam1', role: 'family' });
+    useLessonsMock.mockReturnValue({ lessons: [], loaded: true, error: null, reload: vi.fn() });
+    useProgressMock.mockReturnValue({
+      state: { completedLessonIds: [], streakCount: 0, lastActiveDate: null, familyShareEnabled: true },
+      loaded: false,
+      completeLesson: vi.fn(),
+      setFamilyShare: vi.fn(),
+    });
+    fetchFamilyLinkMock.mockResolvedValue({ elderUserId: 'e1', elderDisplayName: '陳生' });
+    fetchProgressMock.mockResolvedValue({
+      completedLessonIds: ['l1'],
+      streakCount: 3,
+      lastActiveDate: '2026-07-17',
+      familyShareEnabled: true,
+    });
+
+    render(<App />);
+    await waitFor(() => expect(screen.getByText(/陳生/)).toBeInTheDocument());
+  });
+
+  it('shows an error message instead of guessing a role when auth.role is null', () => {
+    useAuthMock.mockReturnValue({ status: 'signed-in', userId: 'u1', role: null });
+    useLessonsMock.mockReturnValue({ lessons: [], loaded: true, error: null, reload: vi.fn() });
+    useProgressMock.mockReturnValue({
+      state: { completedLessonIds: [], streakCount: 0, lastActiveDate: null, familyShareEnabled: true },
+      loaded: false,
+      completeLesson: vi.fn(),
+      setFamilyShare: vi.fn(),
+    });
+
+    render(<App />);
+    expect(screen.getByText(/攞唔到你嘅身份資料/)).toBeInTheDocument();
+    expect(screen.queryByText('主頁')).not.toBeInTheDocument();
   });
 });
