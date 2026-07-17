@@ -9,17 +9,24 @@ interface FamilyProgressViewProps {
 export function FamilyProgressView({ elderUserId, elderDisplayName }: FamilyProgressViewProps) {
   const [progress, setProgress] = useState<RemoteProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let active = true;
-    setError(null);
+    setBusy(true);
     fetchProgress(elderUserId)
       .then((result) => {
-        if (active) setProgress(result);
+        if (active) {
+          setProgress(result);
+          setError(null);
+        }
       })
       .catch((err) => {
         if (active) setError(err instanceof Error ? err.message : '攞唔到進度，請再試');
+      })
+      .finally(() => {
+        if (active) setBusy(false);
       });
     return () => {
       active = false;
@@ -36,8 +43,8 @@ export function FamilyProgressView({ elderUserId, elderDisplayName }: FamilyProg
         </div>
         <div className="fam-card">
           <p className="error-text">攞唔到進度：{error}</p>
-          <button className="bigbtn" onClick={handleRetry}>
-            再試一次
+          <button className="bigbtn" disabled={busy} onClick={handleRetry}>
+            {busy ? '再試緊…' : '再試一次'}
           </button>
         </div>
       </div>
