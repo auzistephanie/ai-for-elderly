@@ -136,3 +136,157 @@ create policy "elder_streaks_family_read"
         and l.family_user_id = auth.uid()
     )
   );
+
+-- One-time pairing codes an elder generates so a family member's account can link to them.
+create table public.elder_pairing_codes (
+  code text primary key,
+  elder_user_id uuid not null references auth.users(id) on delete cascade,
+  expires_at timestamptz not null,
+  used_at timestamptz
+);
+
+alter table public.elder_pairing_codes enable row level security;
+-- No policies: this table is only ever touched through the SECURITY DEFINER RPCs below,
+-- which bypass RLS by running as the function owner. No direct client access at all.
+
+-- OTP outbox: the Send SMS hook writes here instead of dispatching a real SMS;
+-- get_pending_otp() below is how the client reads the code back to display it.
+create table public.elder_login_otps (
+  id uuid primary key default gen_random_uuid(),
+  phone text not null,
+  otp text not null,
+  created_at timestamptz not null default now(),
+  consumed_at timestamptz
+);
+
+alter table public.elder_login_otps enable row level security;
+-- No policies here either — same reasoning, RPC-only access.
+
+-- Called by an authenticated elder to generate a fresh pairing code.
+create or replace function public.create_pairing_code()
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_code text;
+  v_tries int := 0;
+begin
+  if auth.uid() is null then
+    raise exception 'not authenticated';
+  end if;
+
+  loop
+    v_code := lpad(floor(random() * 1000000)::text, 6, '0');
+    v_tries := v_tries + 1;
+    begin
+      insert into public.elder_pairing_codes (code, elder_user_id, expires_at)
+      values (v_code, auth.uid(), now() + interval '10 minutes');
+      exit;
+    exception when unique_violation then
+      if v_tries > 10 then
+        raise exception 'could not generate a unique pairing code, try again';
+      end if;
+    end;
+  end loop;
+
+  return v_code;
+end;
+$$;
+
+revoke all on function public.create_pairing_code() from public;
+grant execute on function public.create_pairing_code() to authenticated;
+
+-- Called by an authenticated family member to redeem a pairing code and link to that elder.
+create or replace function public.redeem_pairing_code(p_code text)
+returns table (elder_user_id uuid, elder_display_name text)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_row public.elder_pairing_codes;
+begin
+  if auth.uid() is null then
+    raise exception 'not authenticated';
+  end if;
+
+  select * into v_row from public.elder_pairing_codes where code = p_code for update;
+
+  if v_row.code is null then
+    raise exception '配對碼錯誤';
+  end if;
+  if v_row.used_at is not null then
+    raise exception '配對碼已經用咗';
+  end if;
+  if v_row.expires_at < now() then
+    raise exception '配對碼過期';
+  end if;
+
+  update public.elder_pairing_codes set used_at = now() where code = p_code;
+
+  insert into public.elder_family_links (elder_user_id, family_user_id)
+  values (v_row.elder_user_id, auth.uid())
+  on conflict do nothing;
+
+  return query
+    select p.user_id, p.display_name from public.elder_profiles p where p.user_id = v_row.elder_user_id;
+end;
+$$;
+
+revoke all on function public.redeem_pairing_code(text) from public;
+grant execute on function public.redeem_pairing_code(text) to authenticated;
+
+-- Called by the client (still signed out, mid-login) to read back the OTP the hook just wrote.
+-- Matches on digits-only so client-side E.164 formatting differences from what Supabase Auth
+-- itself recorded can never cause a lookup miss. One-time reveal: marks the row consumed.
+create or replace function public.get_pending_otp(p_phone text)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_otp text;
+begin
+  select otp into v_otp
+  from public.elder_login_otps
+  where regexp_replace(phone, '[^0-9]', '', 'g') = regexp_replace(p_phone, '[^0-9]', '', 'g')
+    and consumed_at is null
+    and created_at > now() - interval '5 minutes'
+  order by created_at desc
+  limit 1;
+
+  if v_otp is not null then
+    update public.elder_login_otps
+    set consumed_at = now()
+    where regexp_replace(phone, '[^0-9]', '', 'g') = regexp_replace(p_phone, '[^0-9]', '', 'g')
+      and otp = v_otp
+      and consumed_at is null;
+  end if;
+
+  return v_otp;
+end;
+$$;
+
+revoke all on function public.get_pending_otp(text) from public;
+grant execute on function public.get_pending_otp(text) to anon, authenticated;
+
+-- Supabase Auth calls this instead of dispatching a real SMS. event shape per
+-- https://supabase.com/docs/guides/auth/auth-hooks/send-sms-hook :
+-- { "user": {...}, "sms": { "otp": "123456" } }
+create or replace function public.send_sms(event jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.elder_login_otps (phone, otp)
+  values (event->'user'->>'phone', event->'sms'->>'otp');
+end;
+$$;
+
+revoke all on function public.send_sms(jsonb) from public, anon, authenticated;
+grant execute on function public.send_sms(jsonb) to supabase_auth_admin;
