@@ -174,6 +174,63 @@ create table public.elder_login_otps (
 alter table public.elder_login_otps enable row level security;
 -- No policies here either — same reasoning, RPC-only access.
 
+-- Family-to-elder encouragement comments, with elder-only per-comment likes.
+-- Shared feed: any family member currently linked+shared-with an elder can read ALL comments
+-- for that elder (not just their own) — see design doc §3 for the "shared list, not private
+-- threads" decision.
+create table public.elder_family_comments (
+  id uuid primary key default gen_random_uuid(),
+  elder_user_id uuid not null references auth.users(id) on delete cascade,
+  family_user_id uuid not null references auth.users(id) on delete cascade,
+  comment_text text not null,
+  liked boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+alter table public.elder_family_comments enable row level security;
+
+create policy "elder_family_comments_shared_select"
+  on public.elder_family_comments for select
+  using (
+    auth.uid() = elder_user_id
+    or exists (
+      select 1
+      from public.elder_profiles p
+      join public.elder_family_links l on l.elder_user_id = p.user_id
+      where p.user_id = elder_family_comments.elder_user_id
+        and p.role = 'elder'
+        and p.family_share_enabled = true
+        and l.family_user_id = auth.uid()
+    )
+  );
+
+create policy "elder_family_comments_family_insert"
+  on public.elder_family_comments for insert
+  with check (
+    auth.uid() = family_user_id
+    and exists (
+      select 1
+      from public.elder_profiles p
+      join public.elder_family_links l on l.elder_user_id = p.user_id
+      where p.user_id = elder_family_comments.elder_user_id
+        and p.role = 'elder'
+        and p.family_share_enabled = true
+        and l.family_user_id = auth.uid()
+    )
+  );
+
+create policy "elder_family_comments_elder_update"
+  on public.elder_family_comments for update
+  using (auth.uid() = elder_user_id)
+  with check (auth.uid() = elder_user_id);
+
+-- Column-scope the elder's update grant to `liked` only, so a crafted request can't rewrite
+-- the family member's comment text or reassign authorship — matches this schema's existing
+-- care around minimal-necessary grants (see the create_pairing_code/redeem_pairing_code
+-- revoke/grant pairs above).
+revoke update on public.elder_family_comments from authenticated;
+grant update (liked) on public.elder_family_comments to authenticated;
+
 -- Called by an authenticated elder to generate a fresh pairing code.
 create or replace function public.create_pairing_code()
 returns text
