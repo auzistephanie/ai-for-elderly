@@ -78,7 +78,12 @@ Stephanie 嘅電腦本機路徑：`~/Desktop/Stephanie-Google Drive/dev/`
    實際卻因為 RLS policy 太嚴（連 family_share_enabled 呢個 flag 本身都俾政策擋咗）
    錯誤顯示成「0 日 / 0 課」，已經修好 `elder_profiles_family_read` policy 解決咗。
    詳細計劃見 `docs/superpowers/plans/2026-07-17-plan2-supabase-backend.md`。
-   下一步：Plan 3（內容審批流程 + AI 生成課堂 draft）。
+   ✅ Plan 3（內容管道 + 課程引擎 UI）已完成 —
+   12 課場景清單拍咗板；設計期間發現原有 UI 冇地方睇齊全課程，
+   於是整埋「上堂」課程瀏覽畫面（三層 + 防騙必修班分節、🔒/▶️/✅ 狀態、逐層解鎖）；
+   DeepSeek 生成課堂 draft 嘅管道，同埋 Stephanie 人手 approve 用嘅 Streamlit admin 工具都已出街；
+   `lesson-001` 搬咗去佢啱嘅 tier。內容審批完全由 Stephanie 自己一課一課 approve，
+   唔會全自動出街。詳細計劃見 `docs/superpowers/plans/2026-07-17-plan3-content-pipeline.md`。
 2. **Deploy landing page**：揀 domain，換走 placeholder（footer email、CTA link、form 後端）。
 3. **確認首次 push**：雙擊 `push-now.command` 或等 daemon 跑一輪，check
    https://github.com/auzistephanie/ai-for-elderly 有冇見到啲檔案。
@@ -91,4 +96,4 @@ Stephanie 嘅電腦本機路徑：`~/Desktop/Stephanie-Google Drive/dev/`
 
 ---
 
-*最後更新：2026-07-17（Plan 2 Supabase 後端＋電話 OTP 登入完成，end-to-end 驗證通過）*
+*最後更新：2026-07-18（Plan 3 內容管道＋課程引擎 UI 完成，end-to-end 驗證通過）*
