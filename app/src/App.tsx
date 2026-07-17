@@ -96,7 +96,9 @@ function ElderShell({ userId }: { userId: string }) {
         <LessonListScreen lessons={lessons} completedLessonIds={state.completedLessonIds} onSelectLesson={openLesson} />
       )}
       {screen === 'progress' && <ProgressScreen layers={layerTotals} badges={badges} />}
-      {screen === 'family' && <FamilyScreen shareEnabled={state.familyShareEnabled} onToggleShare={setFamilyShare} />}
+      {screen === 'family' && (
+        <FamilyScreen shareEnabled={state.familyShareEnabled} onToggleShare={setFamilyShare} userId={userId} />
+      )}
       <NavBar active={screen} onNavigate={navigate} />
     </div>
   );

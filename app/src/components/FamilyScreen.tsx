@@ -1,15 +1,36 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPairingCode } from '../lib/family';
+import { fetchComments, likeComment, type FamilyComment } from '../lib/comments';
+import { CommentList } from './CommentList';
 
 interface FamilyScreenProps {
   shareEnabled: boolean;
   onToggleShare: (enabled: boolean) => void;
+  userId: string;
 }
 
-export function FamilyScreen({ shareEnabled, onToggleShare }: FamilyScreenProps) {
+export function FamilyScreen({ shareEnabled, onToggleShare, userId }: FamilyScreenProps) {
   const [pairingCode, setPairingCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const [comments, setComments] = useState<FamilyComment[]>([]);
+  const [commentsError, setCommentsError] = useState<string | null>(null);
+  const [likingId, setLikingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    fetchComments(userId)
+      .then((result) => {
+        if (active) setComments(result);
+      })
+      .catch((err) => {
+        if (active) setCommentsError(err instanceof Error ? err.message : '攞唔到留言，請再試');
+      });
+    return () => {
+      active = false;
+    };
+  }, [userId]);
 
   async function handleGenerateCode() {
     if (busy) return;
@@ -22,6 +43,19 @@ export function FamilyScreen({ shareEnabled, onToggleShare }: FamilyScreenProps)
       setError(err instanceof Error ? err.message : '攞唔到配對碼，請再試');
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handleLike(commentId: string) {
+    if (likingId) return;
+    setLikingId(commentId);
+    try {
+      await likeComment(commentId);
+      setComments((prev) => prev.map((c) => (c.id === commentId ? { ...c, liked: true } : c)));
+    } catch {
+      // Best-effort: leave the comment unliked so the user can tap again.
+    } finally {
+      setLikingId(null);
     }
   }
 
@@ -59,6 +93,16 @@ export function FamilyScreen({ shareEnabled, onToggleShare }: FamilyScreenProps)
           )}
         </div>
       )}
+      <div className="fam-card">
+        <h4>家人留言</h4>
+        <CommentList
+          comments={comments}
+          error={commentsError}
+          emptyText="仲未有家人留言，快啲叫佢哋嚟支持你啦"
+          onLike={handleLike}
+          likingId={likingId}
+        />
+      </div>
     </div>
   );
 }
