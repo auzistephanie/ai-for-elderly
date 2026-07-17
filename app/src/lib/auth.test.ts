@@ -32,6 +32,10 @@ describe('toE164', () => {
   it('strips spaces before normalizing', () => {
     expect(toE164('9123 4567')).toBe('+85291234567');
   });
+
+  it('prepends +852 to an 8-digit number that happens to start with 852', () => {
+    expect(toE164('85212345')).toBe('+85285212345');
+  });
 });
 
 describe('requestOtp', () => {
@@ -105,5 +109,16 @@ describe('ensureProfile', () => {
     const role = await ensureProfile('elder');
     expect(role).toBe('elder');
     expect(insert).toHaveBeenCalledWith({ user_id: 'u1', role: 'elder' });
+  });
+
+  it('throws when the insert fails', async () => {
+    getUserMock.mockResolvedValue({ data: { user: { id: 'u1' } } });
+    const maybeSingle = vi.fn().mockResolvedValue({ data: null });
+    const eq = vi.fn(() => ({ maybeSingle }));
+    const select = vi.fn(() => ({ eq }));
+    const insert = vi.fn().mockResolvedValue({ error: { message: 'boom' } });
+    fromMock.mockReturnValue({ select, insert });
+
+    await expect(ensureProfile('elder')).rejects.toThrow('boom');
   });
 });
