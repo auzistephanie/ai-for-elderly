@@ -5,6 +5,7 @@ import type { Lesson } from '../types/lesson';
 export function useLessons() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -14,13 +15,12 @@ export function useLessons() {
       .eq('status', 'published')
       .order('layer', { ascending: true })
       .order('number', { ascending: true })
-      .then(({ data, error }: { data: Lesson[] | null; error: unknown }) => {
+      .then(({ data, error: fetchError }: { data: Lesson[] | null; error: { message?: string } | null }) => {
         if (!active) return;
-        if (error) {
-          // Fetch failed — surface it instead of silently rendering as
-          // "no lessons published yet", which would otherwise look identical.
-          console.error('[useLessons] failed to load lessons:', error);
-        }
+        // A fetch failure must stay distinguishable from "genuinely zero
+        // published lessons" — both would otherwise resolve to an empty
+        // array and look identical to the consumer.
+        setError(fetchError ? (fetchError.message ?? '攞唔到課堂內容') : null);
         setLessons(data ?? []);
         setLoaded(true);
       });
@@ -29,5 +29,5 @@ export function useLessons() {
     };
   }, []);
 
-  return { lessons, loaded };
+  return { lessons, loaded, error };
 }

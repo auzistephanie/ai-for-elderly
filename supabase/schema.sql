@@ -67,7 +67,8 @@ create table public.elder_lessons (
   subtitle text not null,
   steps jsonb not null,
   status text not null default 'published' check (status in ('published', 'pending')),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  unique (layer, number)
 );
 
 alter table public.elder_lessons enable row level security;

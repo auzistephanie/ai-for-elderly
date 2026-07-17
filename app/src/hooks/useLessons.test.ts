@@ -39,5 +39,22 @@ describe('useLessons', () => {
     expect(eq).toHaveBeenCalledWith('status', 'published');
     expect(result.current.lessons).toHaveLength(1);
     expect(result.current.lessons[0].id).toBe('lesson-001');
+    expect(result.current.error).toBeNull();
+  });
+
+  it('exposes an error instead of silently reporting zero lessons when the query fails', async () => {
+    const then = (cb: (result: { data: unknown; error: unknown }) => void) =>
+      cb({ data: null, error: { message: 'network down' } });
+    const order2 = vi.fn(() => ({ then }));
+    const order1 = vi.fn(() => ({ order: order2 }));
+    const eq = vi.fn(() => ({ order: order1 }));
+    const select = vi.fn(() => ({ eq }));
+    fromMock.mockReturnValue({ select });
+
+    const { result } = renderHook(() => useLessons());
+
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+    expect(result.current.error).toBe('network down');
+    expect(result.current.lessons).toEqual([]);
   });
 });
