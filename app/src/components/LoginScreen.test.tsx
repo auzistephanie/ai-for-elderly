@@ -19,7 +19,7 @@ import { LoginScreen } from './LoginScreen';
 describe('LoginScreen', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('walks through role choice -> phone -> OTP confirm -> onLoggedIn', async () => {
+  it('walks through role choice -> name -> phone -> OTP confirm -> onLoggedIn', async () => {
     requestOtpMock.mockResolvedValue({ error: null });
     fetchDisplayedOtpMock.mockResolvedValue('561166');
     verifyOtpMock.mockResolvedValue({ error: null });
@@ -29,6 +29,8 @@ describe('LoginScreen', () => {
     render(<LoginScreen onLoggedIn={onLoggedIn} />);
 
     await userEvent.click(screen.getByText('我係長者'));
+    await userEvent.type(screen.getByPlaceholderText('你個名'), '陳生');
+    await userEvent.click(screen.getByText('下一步'));
     await userEvent.type(screen.getByPlaceholderText('912345678'), '91234567');
     await userEvent.click(screen.getByText('傳送驗證碼'));
 
@@ -37,8 +39,16 @@ describe('LoginScreen', () => {
     await userEvent.click(screen.getByText('確認登入'));
 
     expect(verifyOtpMock).toHaveBeenCalledWith('91234567', '561166');
-    expect(ensureProfileMock).toHaveBeenCalledWith('elder');
+    expect(ensureProfileMock).toHaveBeenCalledWith('elder', '陳生');
     expect(onLoggedIn).toHaveBeenCalledTimes(1);
+  });
+
+  it('disables the next button until a name is entered', async () => {
+    render(<LoginScreen onLoggedIn={vi.fn()} />);
+    await userEvent.click(screen.getByText('我係仔女'));
+    expect(screen.getByText('下一步')).toBeDisabled();
+    await userEvent.type(screen.getByPlaceholderText('你個名'), '陳小姐');
+    expect(screen.getByText('下一步')).not.toBeDisabled();
   });
 
   it('shows an error and stays on the phone step when sending fails', async () => {
@@ -46,6 +56,8 @@ describe('LoginScreen', () => {
 
     render(<LoginScreen onLoggedIn={vi.fn()} />);
     await userEvent.click(screen.getByText('我係仔女'));
+    await userEvent.type(screen.getByPlaceholderText('你個名'), '陳小姐');
+    await userEvent.click(screen.getByText('下一步'));
     await userEvent.type(screen.getByPlaceholderText('912345678'), '91234567');
     await userEvent.click(screen.getByText('傳送驗證碼'));
 
@@ -62,6 +74,8 @@ describe('LoginScreen', () => {
     render(<LoginScreen onLoggedIn={onLoggedIn} />);
 
     await userEvent.click(screen.getByText('我係長者'));
+    await userEvent.type(screen.getByPlaceholderText('你個名'), '陳生');
+    await userEvent.click(screen.getByText('下一步'));
     await userEvent.type(screen.getByPlaceholderText('912345678'), '91234567');
     await userEvent.click(screen.getByText('傳送驗證碼'));
 

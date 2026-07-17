@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { requestOtp, fetchDisplayedOtp, verifyOtp, ensureProfile } from '../lib/auth';
 import type { UserRole } from '../types/auth';
 
-type Step = 'choose-role' | 'enter-phone' | 'confirm-otp';
+type Step = 'choose-role' | 'enter-name' | 'enter-phone' | 'confirm-otp';
 
 interface LoginScreenProps {
   onLoggedIn: () => void;
@@ -11,6 +11,7 @@ interface LoginScreenProps {
 export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
   const [step, setStep] = useState<Step>('choose-role');
   const [role, setRole] = useState<UserRole | null>(null);
+  const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +61,7 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
       return;
     }
     try {
-      await ensureProfile(role);
+      await ensureProfile(role, name.trim());
     } catch {
       setError('登入失敗，請再試一次');
       setBusy(false);
@@ -83,7 +84,7 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             className="bigbtn"
             onClick={() => {
               setRole('elder');
-              setStep('enter-phone');
+              setStep('enter-name');
             }}
           >
             我係長者
@@ -92,10 +93,26 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             className="bigbtn"
             onClick={() => {
               setRole('family');
-              setStep('enter-phone');
+              setStep('enter-name');
             }}
           >
             我係仔女
+          </button>
+        </div>
+      )}
+
+      {step === 'enter-name' && (
+        <div className="fam-card">
+          <p>你個名係？</p>
+          <input
+            className="phone-input"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="你個名"
+          />
+          <button className="bigbtn" disabled={!name.trim()} onClick={() => setStep('enter-phone')}>
+            下一步
           </button>
         </div>
       )}
