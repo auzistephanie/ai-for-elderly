@@ -70,8 +70,15 @@ Stephanie 嘅電腦本機路徑：`~/Desktop/Stephanie-Google Drive/dev/`
 ## 下一步（未做）
 
 1. ~~起 MVP：開新 repo，放入...~~ ✅ Plan 1（walking skeleton）已完成，喺 `app/`。
-   下一步：Plan 2（Supabase 後端 + 電話 OTP 登入）— 見
-   `docs/superpowers/plans/2026-07-16-mvp-walking-skeleton.md` 頂部嘅 5-plan roadmap。
+   ✅ Plan 2（Supabase 後端 + 電話 OTP 登入）已完成 —
+   真 Supabase 專案（`cmtubaxlniglklmdwlzs`）電話 OTP 登入（自訂 Send SMS Hook 代替真短訊）、
+   長者／家人角色分流、配對碼、課堂內容同進度全部搬咗去 Supabase（唔再靠 localStorage）。
+   End-to-end 手動驗證（2026-07-17）全部通過，順便執到並修好一個真 bug：
+   長者閂咗「分享進度」之後，家人畫面本應顯示「對方而家冇分享緊進度」，
+   實際卻因為 RLS policy 太嚴（連 family_share_enabled 呢個 flag 本身都俾政策擋咗）
+   錯誤顯示成「0 日 / 0 課」，已經修好 `elder_profiles_family_read` policy 解決咗。
+   詳細計劃見 `docs/superpowers/plans/2026-07-17-plan2-supabase-backend.md`。
+   下一步：Plan 3（內容審批流程 + AI 生成課堂 draft）。
 2. **Deploy landing page**：揀 domain，換走 placeholder（footer email、CTA link、form 後端）。
 3. **確認首次 push**：雙擊 `push-now.command` 或等 daemon 跑一輪，check
    https://github.com/auzistephanie/ai-for-elderly 有冇見到啲檔案。
@@ -84,4 +91,4 @@ Stephanie 嘅電腦本機路徑：`~/Desktop/Stephanie-Google Drive/dev/`
 
 ---
 
-*最後更新：2026-07-17（Plan 1 walking skeleton 完成）*
+*最後更新：2026-07-17（Plan 2 Supabase 後端＋電話 OTP 登入完成，end-to-end 驗證通過）*

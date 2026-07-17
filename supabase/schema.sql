@@ -46,11 +46,20 @@ create policy "elder_family_links_participant_select"
   using (auth.uid() = elder_user_id or auth.uid() = family_user_id);
 
 -- Now that elder_family_links exists, add the family-read policy to elder_profiles.
+--
+-- NOTE (fixed 2026-07-17 during Plan 2 Task 13 end-to-end verification): this policy must NOT
+-- gate visibility on family_share_enabled = true. A linked family member needs to be able to
+-- read this row's family_share_enabled column PRECISELY WHEN IT IS FALSE, so the client can
+-- render "對方而家冇分享緊進度" instead of misreading a hidden row as "still sharing" (the
+-- client's fetchProgress() defaults family_share_enabled to true when no row comes back, which
+-- is meant for "no profile yet", not "row exists but hidden by RLS"). The actual progress data
+-- (elder_streaks, elder_lesson_completions) stays correctly hidden while sharing is off via
+-- those tables' OWN family-read policies, which still require family_share_enabled = true --
+-- this table only exposes the boolean flag itself, which isn't sensitive.
 create policy "elder_profiles_family_read"
   on public.elder_profiles for select
   using (
     role = 'elder'
-    and family_share_enabled = true
     and exists (
       select 1 from public.elder_family_links l
       where l.elder_user_id = elder_profiles.user_id
