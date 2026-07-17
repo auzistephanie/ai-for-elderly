@@ -26,7 +26,7 @@ export async function verifyOtp(phone: string, code: string): Promise<{ error: s
   return { error: error?.message ?? null };
 }
 
-export async function ensureProfile(chosenRole: UserRole): Promise<UserRole> {
+export async function ensureProfile(chosenRole: UserRole, displayName: string): Promise<UserRole> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -40,7 +40,9 @@ export async function ensureProfile(chosenRole: UserRole): Promise<UserRole> {
 
   if (existing) return existing.role as UserRole;
 
-  const { error: insertError } = await supabase.from('elder_profiles').insert({ user_id: user.id, role: chosenRole });
+  const { error: insertError } = await supabase
+    .from('elder_profiles')
+    .insert({ user_id: user.id, role: chosenRole, display_name: displayName });
   if (insertError) throw new Error(insertError.message);
   return chosenRole;
 }

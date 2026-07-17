@@ -93,12 +93,12 @@ describe('ensureProfile', () => {
     const insert = vi.fn();
     fromMock.mockReturnValue({ select, insert });
 
-    const role = await ensureProfile('elder');
+    const role = await ensureProfile('elder', '陳生');
     expect(role).toBe('family');
     expect(insert).not.toHaveBeenCalled();
   });
 
-  it('inserts a new profile with the chosen role when none exists', async () => {
+  it('inserts a new profile with the chosen role and display name when none exists', async () => {
     getUserMock.mockResolvedValue({ data: { user: { id: 'u1' } } });
     const maybeSingle = vi.fn().mockResolvedValue({ data: null });
     const eq = vi.fn(() => ({ maybeSingle }));
@@ -106,9 +106,9 @@ describe('ensureProfile', () => {
     const insert = vi.fn().mockResolvedValue({ error: null });
     fromMock.mockReturnValue({ select, insert });
 
-    const role = await ensureProfile('elder');
+    const role = await ensureProfile('elder', '陳生');
     expect(role).toBe('elder');
-    expect(insert).toHaveBeenCalledWith({ user_id: 'u1', role: 'elder' });
+    expect(insert).toHaveBeenCalledWith({ user_id: 'u1', role: 'elder', display_name: '陳生' });
   });
 
   it('throws when the insert fails', async () => {
@@ -119,6 +119,6 @@ describe('ensureProfile', () => {
     const insert = vi.fn().mockResolvedValue({ error: { message: 'boom' } });
     fromMock.mockReturnValue({ select, insert });
 
-    await expect(ensureProfile('elder')).rejects.toThrow('boom');
+    await expect(ensureProfile('elder', '陳生')).rejects.toThrow('boom');
   });
 });
