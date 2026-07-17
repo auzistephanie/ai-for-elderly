@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 
@@ -32,15 +32,16 @@ vi.mock('./lib/progressApi', () => ({
 }));
 
 import { App } from './App';
+import type { Lesson } from './types/lesson';
 
-const seedLesson = {
+const seedLesson: Lesson = {
   id: 'lesson-001',
   layer: 1 as const,
   number: 1,
   title: 'AI 係咩',
   subtitle: '第一課',
   steps: [
-    { kind: 'why' as const, title: 'W', body: ['x'], speak: 's' },
+    { kind: 'why' as const, title: '點解要學呢樣嘢？', body: ['x'], speak: 's' },
     { kind: 'demo' as const, title: 'D', bubbles: [], body: ['x'], speak: 's' },
     {
       kind: 'quiz' as const,
@@ -171,5 +172,93 @@ describe('App auth gate', () => {
     render(<App />);
     expect(screen.getByText(/攞唔到你嘅身份資料/)).toBeInTheDocument();
     expect(screen.queryByText('主頁')).not.toBeInTheDocument();
+  });
+});
+
+describe('App course engine (elder)', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const layer1: Lesson = { ...seedLesson, id: 'l1', layer: 1, number: 1, subtitle: '第一層課' };
+  const layer2: Lesson = { ...seedLesson, id: 'l2', layer: 2, number: 4, subtitle: '第二層課' };
+  const antiFraud: Lesson = { ...seedLesson, id: 'af', layer: 0, number: 1, subtitle: '防騙課' };
+
+  function mockElder(lessons: Lesson[], completedLessonIds: string[]) {
+    useAuthMock.mockReturnValue({ status: 'signed-in', userId: 'u1', role: 'elder' });
+    useLessonsMock.mockReturnValue({ lessons, loaded: true, error: null, reload: vi.fn() });
+    useProgressMock.mockReturnValue({
+      state: { completedLessonIds, streakCount: 3, lastActiveDate: '2026-07-17', familyShareEnabled: true },
+      loaded: true,
+      completeLesson: vi.fn(),
+      setFamilyShare: vi.fn(),
+    });
+  }
+
+  // HomeScreen's own "上堂" quick-action button label shares its exact text with the NavBar's
+  // "上堂" tab (RTL's default text matcher reads each element's own direct text node, and both
+  // the NavBar <button> and the bigbtn's inner <span> have "上堂" as a direct text child), so a
+  // bare screen.getByText('上堂') is ambiguous whenever Home is on screen. Scoping to the <nav>
+  // disambiguates without touching HomeScreen/NavBar markup, which are out of scope for this task.
+  function clickNavTab(label: string) {
+    return userEvent.click(within(screen.getByRole('navigation')).getByText(label));
+  }
+
+  it('opening a lesson from the 上堂 tab list shows that specific LessonScreen', async () => {
+    mockElder([layer1, layer2], []);
+    render(<App />);
+    await clickNavTab('上堂');
+    expect(screen.getByText('第一層課')).toBeInTheDocument();
+    await userEvent.click(screen.getByText('第一層課'));
+    // LessonScreen renders the lesson's first (why) step title, plus its subtitle in the
+    // topbar — both inherited from the shared `seedLesson` fixture except subtitle, which
+    // was overridden per-lesson above, so this confirms both "we're on LessonScreen now"
+    // and "specifically for lesson l1", not just any lesson.
+    expect(screen.getByText('點解要學呢樣嘢？')).toBeInTheDocument();
+    expect(screen.getByText('第一層課')).toBeInTheDocument();
+  });
+
+  it("tapping home's today-card opens that lesson directly, skipping the list", async () => {
+    mockElder([layer1], []);
+    render(<App />);
+    await userEvent.click(screen.getByText('開始上堂 ▶'));
+    expect(screen.getByText('點解要學呢樣嘢？')).toBeInTheDocument();
+  });
+
+  it('navigating to a different tab and back to 上堂 shows the list again, not the previously-open lesson', async () => {
+    mockElder([layer1], []);
+    render(<App />);
+    await clickNavTab('上堂');
+    // '揀一課，慢慢學' is LessonListScreen's own topbar subtitle — a marker that's only
+    // present on the list view, unlike the lesson's own subtitle text which appears in
+    // both the list row AND (relocated) the opened LessonScreen's topbar.
+    expect(screen.getByText('揀一課，慢慢學')).toBeInTheDocument();
+    await userEvent.click(screen.getByText('第一層課'));
+    expect(screen.queryByText('揀一課，慢慢學')).not.toBeInTheDocument();
+    expect(screen.getByText('點解要學呢樣嘢？')).toBeInTheDocument();
+    await clickNavTab('主頁');
+    await clickNavTab('上堂');
+    expect(screen.getByText('揀一課，慢慢學')).toBeInTheDocument();
+  });
+
+  it('locks layer-2 lessons until layer 1 is fully completed', async () => {
+    mockElder([layer1, layer2], []);
+    render(<App />);
+    await clickNavTab('上堂');
+    expect(screen.getByText('第二層課').closest('button')).toBeDisabled();
+  });
+
+  it('shows the encouragement placeholder on Home when every unlocked lesson is completed', () => {
+    mockElder([layer1], ['l1']);
+    render(<App />);
+    expect(screen.getByText('今層學晒喇', { exact: false })).toBeInTheDocument();
+  });
+
+  it('enables the always-unlocked anti-fraud button once that lesson exists', async () => {
+    mockElder([layer1, antiFraud], []);
+    render(<App />);
+    const btn = screen.getByText('防騙必修班').closest('button')!;
+    expect(btn).not.toBeDisabled();
+    await userEvent.click(btn);
+    expect(screen.getByText('點解要學呢樣嘢？')).toBeInTheDocument();
+    expect(screen.getByText('防騙課')).toBeInTheDocument();
   });
 });

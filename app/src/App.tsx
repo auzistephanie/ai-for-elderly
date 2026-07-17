@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { NavBar } from './components/NavBar';
 import { HomeScreen } from './components/HomeScreen';
 import { LessonScreen } from './components/LessonScreen';
+import { LessonListScreen } from './components/LessonListScreen';
 import { ProgressScreen } from './components/ProgressScreen';
 import { FamilyScreen } from './components/FamilyScreen';
 import { LoginScreen } from './components/LoginScreen';
@@ -11,12 +12,26 @@ import { useAuth } from './hooks/useAuth';
 import { useLessons } from './hooks/useLessons';
 import { useProgress, computeBadges } from './hooks/useProgress';
 import { fetchFamilyLink } from './lib/family';
+import { LAYER_NAMES, getNextLesson, isLayerCompleted } from './lib/courseEngine';
 import type { ScreenName } from './types/screen';
 
 function ElderShell({ userId }: { userId: string }) {
   const [screen, setScreen] = useState<ScreenName>('home');
+  const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
   const { lessons, loaded: lessonsLoaded, error: lessonsError, reload: reloadLessons } = useLessons();
   const { state, completeLesson, setFamilyShare } = useProgress(userId);
+
+  // Navigating via the bottom tabs always resets to that tab's top-level view — only an
+  // explicit tap on a lesson row/card drills into a specific lesson (openLesson below).
+  function navigate(next: ScreenName) {
+    setActiveLessonId(null);
+    setScreen(next);
+  }
+
+  function openLesson(lessonId: string) {
+    setActiveLessonId(lessonId);
+    setScreen('lesson');
+  }
 
   // A fetch failure is distinct from "genuinely zero lessons" (see useLessons) and must not
   // be swallowed into a silent blank/empty-state screen — surface it with the same
@@ -40,43 +55,49 @@ function ElderShell({ userId }: { userId: string }) {
 
   if (!lessonsLoaded) return <div className="app" />;
 
-  const todayLesson = lessons[0] ?? null;
-  const layer1Total = lessons.filter((l) => l.layer === 1).length;
-  const layer1Completed = lessons.filter((l) => l.layer === 1 && state.completedLessonIds.includes(l.id)).length;
+  const nextLesson = getNextLesson(lessons, state.completedLessonIds);
+  const antiFraudLesson = lessons.find((l) => l.layer === 0) ?? null;
+  const activeLesson = lessons.find((l) => l.id === activeLessonId) ?? null;
+
+  const layerTotals = ([1, 2, 3] as const).map((layer) => ({
+    layer,
+    name: LAYER_NAMES[layer],
+    totalLessons: lessons.filter((l) => l.layer === layer).length,
+    completedLessons: lessons.filter((l) => l.layer === layer && state.completedLessonIds.includes(l.id)).length,
+  }));
 
   const badges = computeBadges({
     completedCount: state.completedLessonIds.length,
     streakCount: state.streakCount,
-    antiFraudDone: false,
-    allLayersDone: false,
+    antiFraudDone: antiFraudLesson !== null && state.completedLessonIds.includes(antiFraudLesson.id),
+    allLayersDone: ([1, 2, 3] as const).every((layer) => isLayerCompleted(lessons, layer, state.completedLessonIds)),
   });
 
   return (
     <div className="app">
-      {screen === 'home' && todayLesson && (
-        <HomeScreen todayLesson={todayLesson} streakCount={state.streakCount} onStartLesson={() => setScreen('lesson')} />
+      {screen === 'home' && (
+        <HomeScreen
+          nextLesson={nextLesson}
+          antiFraudLesson={antiFraudLesson}
+          streakCount={state.streakCount}
+          onSelectLesson={openLesson}
+        />
       )}
-      {screen === 'lesson' && todayLesson && (
+      {screen === 'lesson' && activeLesson && (
         <LessonScreen
-          lesson={todayLesson}
+          lesson={activeLesson}
           onComplete={() => {
-            completeLesson(todayLesson.id);
-            setScreen('progress');
+            completeLesson(activeLesson.id);
+            navigate('progress');
           }}
         />
       )}
-      {screen === 'progress' && (
-        <ProgressScreen
-          layers={[
-            { layer: 1, name: 'AI 入門（淺）', totalLessons: layer1Total, completedLessons: layer1Completed },
-            { layer: 2, name: '生活應用（中）', totalLessons: 0, completedLessons: 0 },
-            { layer: 3, name: '進階玩法（深）', totalLessons: 0, completedLessons: 0 },
-          ]}
-          badges={badges}
-        />
+      {screen === 'lesson' && !activeLesson && (
+        <LessonListScreen lessons={lessons} completedLessonIds={state.completedLessonIds} onSelectLesson={openLesson} />
       )}
+      {screen === 'progress' && <ProgressScreen layers={layerTotals} badges={badges} />}
       {screen === 'family' && <FamilyScreen shareEnabled={state.familyShareEnabled} onToggleShare={setFamilyShare} />}
-      <NavBar active={screen} onNavigate={setScreen} />
+      <NavBar active={screen} onNavigate={navigate} />
     </div>
   );
 }
