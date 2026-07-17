@@ -8,11 +8,25 @@ export interface RemoteProgress {
 }
 
 export async function fetchProgress(userId: string): Promise<RemoteProgress> {
-  const [{ data: completions }, { data: streak }, { data: profile }] = await Promise.all([
+  const [
+    { data: completions, error: completionsError },
+    { data: streak, error: streakError },
+    { data: profile, error: profileError },
+  ] = await Promise.all([
     supabase.from('elder_lesson_completions').select('lesson_id').eq('user_id', userId),
     supabase.from('elder_streaks').select('streak_count,last_active_date').eq('user_id', userId).maybeSingle(),
     supabase.from('elder_profiles').select('family_share_enabled').eq('user_id', userId).maybeSingle(),
   ]);
+
+  if (completionsError) {
+    throw completionsError;
+  }
+  if (streakError) {
+    throw streakError;
+  }
+  if (profileError) {
+    throw profileError;
+  }
 
   return {
     completedLessonIds: (completions ?? []).map((row: { lesson_id: string }) => row.lesson_id),

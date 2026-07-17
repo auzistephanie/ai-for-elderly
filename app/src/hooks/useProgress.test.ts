@@ -83,7 +83,7 @@ describe('useProgress', () => {
     expect(result.current.state.streakCount).toBe(2);
   });
 
-  it('completeLesson calls markLessonCompleted and updates local state optimistically', async () => {
+  it('completeLesson calls markLessonCompleted and updates local state once the write succeeds', async () => {
     fetchProgressMock.mockResolvedValue({
       completedLessonIds: [],
       streakCount: 0,

@@ -37,6 +37,33 @@ describe('fetchProgress', () => {
       familyShareEnabled: false,
     });
   });
+
+  it('throws instead of silently defaulting when a query returns an error', async () => {
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'elder_lesson_completions') {
+        return {
+          select: () => ({
+            eq: () => Promise.resolve({ data: null, error: { message: 'boom' } }),
+          }),
+        };
+      }
+      if (table === 'elder_streaks') {
+        return {
+          select: () => ({
+            eq: () => ({ maybeSingle: () => Promise.resolve({ data: { streak_count: 3, last_active_date: '2026-07-16' } }) }),
+          }),
+        };
+      }
+      if (table === 'elder_profiles') {
+        return {
+          select: () => ({ eq: () => ({ maybeSingle: () => Promise.resolve({ data: { family_share_enabled: false } }) }) }),
+        };
+      }
+      throw new Error(`unexpected table ${table}`);
+    });
+
+    await expect(fetchProgress('u1')).rejects.toEqual({ message: 'boom' });
+  });
 });
 
 describe('markLessonCompleted', () => {
@@ -49,6 +76,13 @@ describe('markLessonCompleted', () => {
       { user_id: 'u1', lesson_id: 'l1' },
       { onConflict: 'user_id,lesson_id', ignoreDuplicates: true },
     );
+  });
+
+  it('throws when the upsert returns an error', async () => {
+    const upsert = vi.fn().mockResolvedValue({ error: { message: 'boom' } });
+    fromMock.mockReturnValue({ upsert });
+
+    await expect(markLessonCompleted('u1', 'l1')).rejects.toEqual({ message: 'boom' });
   });
 });
 
@@ -84,6 +118,17 @@ describe('touchStreak', () => {
       expect.objectContaining({ user_id: 'u1', streak_count: 5, last_active_date: '2026-07-16' }),
     );
   });
+
+  it('throws when the upsert returns an error', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({ data: { streak_count: 4, last_active_date: '2026-07-15' } });
+    const eq = vi.fn(() => ({ maybeSingle }));
+    const select = vi.fn(() => ({ eq }));
+    const upsert = vi.fn().mockResolvedValue({ error: { message: 'boom' } });
+    fromMock.mockReturnValue({ select, upsert });
+
+    const calcStreak = vi.fn().mockReturnValue(5);
+    await expect(touchStreak('u1', '2026-07-16', calcStreak)).rejects.toEqual({ message: 'boom' });
+  });
 });
 
 describe('setFamilyShareEnabled', () => {
@@ -95,5 +140,13 @@ describe('setFamilyShareEnabled', () => {
     await setFamilyShareEnabled('u1', false);
     expect(update).toHaveBeenCalledWith({ family_share_enabled: false });
     expect(eq).toHaveBeenCalledWith('user_id', 'u1');
+  });
+
+  it('throws when the update returns an error', async () => {
+    const eq = vi.fn().mockResolvedValue({ error: { message: 'boom' } });
+    const update = vi.fn(() => ({ eq }));
+    fromMock.mockReturnValue({ update });
+
+    await expect(setFamilyShareEnabled('u1', false)).rejects.toEqual({ message: 'boom' });
   });
 });
