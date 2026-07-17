@@ -39,9 +39,9 @@ describe('redeemPairingCode', () => {
     await expect(redeemPairingCode('000000')).rejects.toThrow('配對碼過期');
   });
 
-  it('throws a friendly message when the RPC succeeds but returns no rows', async () => {
+  it('throws a distinct message (not "wrong code") when the RPC succeeds but returns no rows', async () => {
     rpcMock.mockResolvedValue({ data: [], error: null });
-    await expect(redeemPairingCode('384920')).rejects.toThrow('配對碼錯誤');
+    await expect(redeemPairingCode('384920')).rejects.toThrow('配對成功，但攞唔到長者資料');
   });
 });
 
