@@ -1,9 +1,30 @@
+import { useState } from 'react';
+import { createPairingCode } from '../lib/family';
+
 interface FamilyScreenProps {
   shareEnabled: boolean;
   onToggleShare: (enabled: boolean) => void;
 }
 
 export function FamilyScreen({ shareEnabled, onToggleShare }: FamilyScreenProps) {
+  const [pairingCode, setPairingCode] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function handleGenerateCode() {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const code = await createPairingCode();
+      setPairingCode(code);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '攞唔到配對碼，請再試');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="screen">
       <div className="topbar">
@@ -22,8 +43,20 @@ export function FamilyScreen({ shareEnabled, onToggleShare }: FamilyScreenProps)
         </div>
       </div>
       {shareEnabled && (
-        <div className="fam-card" style={{ color: '#888', fontSize: 22 }}>
-          ➕ 想加多個家人？撳呢度用 WhatsApp 邀請。
+        <div className="fam-card">
+          {pairingCode ? (
+            <>
+              <p>配對碼（俾屋企人 10 分鐘內輸入）：</p>
+              <p className="otp-display">{pairingCode}</p>
+            </>
+          ) : (
+            <>
+              <button className="bigbtn" disabled={busy} onClick={handleGenerateCode}>
+                {busy ? '產生緊…' : '產生配對碼'}
+              </button>
+              {error && <p className="error-text">{error}</p>}
+            </>
+          )}
         </div>
       )}
     </div>
