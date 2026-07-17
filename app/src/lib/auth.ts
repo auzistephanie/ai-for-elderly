@@ -1,0 +1,44 @@
+import { supabase } from './supabaseClient';
+import type { UserRole } from '../types/auth';
+
+export function toE164(phone: string): string {
+  const trimmed = phone.trim();
+  const digits = trimmed.replace(/[^0-9]/g, '');
+  if (trimmed.startsWith('+')) return `+${digits}`;
+  if (digits.startsWith('852')) return `+${digits}`;
+  return `+852${digits}`;
+}
+
+export async function requestOtp(phone: string): Promise<{ error: string | null }> {
+  const { error } = await supabase.auth.signInWithOtp({ phone: toE164(phone) });
+  return { error: error?.message ?? null };
+}
+
+export async function fetchDisplayedOtp(phone: string): Promise<string | null> {
+  const { data, error } = await supabase.rpc('get_pending_otp', { p_phone: toE164(phone) });
+  if (error) return null;
+  return (data as string | null) ?? null;
+}
+
+export async function verifyOtp(phone: string, code: string): Promise<{ error: string | null }> {
+  const { error } = await supabase.auth.verifyOtp({ phone: toE164(phone), token: code, type: 'sms' });
+  return { error: error?.message ?? null };
+}
+
+export async function ensureProfile(chosenRole: UserRole): Promise<UserRole> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('not authenticated');
+
+  const { data: existing } = await supabase
+    .from('elder_profiles')
+    .select('role')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (existing) return existing.role as UserRole;
+
+  await supabase.from('elder_profiles').insert({ user_id: user.id, role: chosenRole });
+  return chosenRole;
+}
