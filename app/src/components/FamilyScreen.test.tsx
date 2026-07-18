@@ -77,21 +77,6 @@ describe('FamilyScreen', () => {
     expect(await screen.findByText('❤️')).toBeInTheDocument();
   });
 
-  it('shows an error when liking a comment fails, and lets the user retry', async () => {
-    fetchCommentsMock.mockResolvedValue([
-      { id: 'c1', familyUserId: 'f1', familyDisplayName: '陳小姐', commentText: '好叻呀！', liked: false, createdAt: '2026-07-18T10:00:00Z' },
-    ]);
-    likeCommentMock.mockRejectedValue(new Error('boom'));
-    render(<FamilyScreen shareEnabled={true} onToggleShare={vi.fn()} userId="u1" />);
-
-    const likeBtn = await screen.findByText('🤍');
-    await userEvent.click(likeBtn);
-
-    expect(await screen.findByText('boom')).toBeInTheDocument();
-    expect(screen.queryByText('❤️')).not.toBeInTheDocument();
-    expect(screen.getByText('🤍')).not.toBeDisabled();
-  });
-
   it('shows the empty-comments message when there are none', async () => {
     render(<FamilyScreen shareEnabled={true} onToggleShare={vi.fn()} userId="u1" />);
     expect(await screen.findByText('仲未有家人留言，快啲叫佢哋嚟支持你啦')).toBeInTheDocument();

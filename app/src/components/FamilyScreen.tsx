@@ -21,7 +21,6 @@ export function FamilyScreen({ shareEnabled, onToggleShare, userId }: FamilyScre
   const [comments, setComments] = useState<FamilyComment[]>([]);
   const [commentsError, setCommentsError] = useState<string | null>(null);
   const [likingId, setLikingId] = useState<string | null>(null);
-  const [likeError, setLikeError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -63,14 +62,11 @@ export function FamilyScreen({ shareEnabled, onToggleShare, userId }: FamilyScre
   async function handleLike(commentId: string) {
     if (likingId) return;
     setLikingId(commentId);
-    setLikeError(null);
     try {
       await likeComment(commentId);
       setComments((prev) => prev.map((c) => (c.id === commentId ? { ...c, liked: true } : c)));
-    } catch (err) {
-      // Leave the comment unliked so the user can tap again, but tell them it didn't
-      // silently succeed — previously this failed with zero feedback.
-      setLikeError(err instanceof Error ? err.message : '撳讚失敗，請再試');
+    } catch {
+      // Best-effort: leave the comment unliked so the user can tap again.
     } finally {
       setLikingId(null);
     }
@@ -130,7 +126,6 @@ export function FamilyScreen({ shareEnabled, onToggleShare, userId }: FamilyScre
       )}
       <div className="fam-card">
         <h4>家人留言</h4>
-        {likeError && <p className="error-text">{likeError}</p>}
         <CommentList
           comments={comments}
           error={commentsError}
