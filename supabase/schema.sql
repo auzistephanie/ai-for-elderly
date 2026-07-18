@@ -251,6 +251,23 @@ create policy "elder_family_comments_elder_update"
 revoke update on public.elder_family_comments from authenticated;
 grant update (liked) on public.elder_family_comments to authenticated;
 
+-- Minimal analytics (spec §9): which lessons get started but never completed, so Stephanie
+-- can spot content that's too hard or too boring. Write-only from the app's perspective --
+-- only the admin Streamlit tool (service_role key, bypasses RLS) ever reads this back, so
+-- there's deliberately no select policy for regular users.
+create table public.elder_lesson_starts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  lesson_id text not null references public.elder_lessons(id) on delete cascade,
+  started_at timestamptz not null default now()
+);
+
+alter table public.elder_lesson_starts enable row level security;
+
+create policy "elder_lesson_starts_self_insert"
+  on public.elder_lesson_starts for insert
+  with check (auth.uid() = user_id);
+
 -- Called by an authenticated elder to generate a fresh pairing code.
 create or replace function public.create_pairing_code()
 returns text
