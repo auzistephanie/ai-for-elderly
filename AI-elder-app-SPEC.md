@@ -55,12 +55,12 @@
 
 - 場景課（主軸）＋工具課（教 ChatGPT / Gemini / 手機 AI 功能操作，內容要易更新因為工具 UI 成日改）＋防騙課（必修）。
 
-## 6. 內容管道（已鎖定：AI 生成 + 人手 approve）
+## 6. 內容管道（2026-07-19 更新：AI 生成即自動出街，唔再係人手 approve gate）
 
 - 課程內容以**結構化檔案**儲存（JSON 或 MD + frontmatter），一課一檔，包含：層級、場景、三步內容、quiz、TTS 文本。
-- **更新流程**：AI 定時生成新課 draft → 入 pending 隊列 → Stephanie 喺簡單 admin 介面撳 approve / reject / edit → approve 先出街。
+- **更新流程**：AI 生成新課 → 直接 `status='published'` 出街，唔使等 approve。
 - 節奏：**每週 2–3 課新內容**。
-- Admin 介面可以好簡陋（俾 Stephanie 一個人用），但 approve flow 必須存在 — **嚴禁全自動出街**。
+- **2026-07-19 政策改變（Stephanie 拍板）**：原本「approve flow 必須存在，嚴禁全自動出街」呢條規已取消，佢信得過 DeepSeek 嘅生成質素，唔想再逐課人手撳approve。Admin 介面（`admin/app.py`）保留，但改做事後補救用（睇/edit/unpublish 已出街嘅課），唔再係出街前必經嘅gate。
 - 生成排程用邊個機制（GitHub Action / cron / Cowork scheduled task）由 Claude Code 建議，揀最慳功夫嗰個。
 
 ## 7. UI 鐵律（已鎖定，唔可以妥協）
@@ -100,7 +100,7 @@
 - [ ] 由零開始行完一課（三步 + quiz）全程唔使打過一隻字
 - [ ] 所有正文字 ≥22px，touch target ≥60px
 - [ ] 每步「讀出嚟」有聲、係廣東話
-- [ ] 未 approve 嘅課喺 app 完全見唔到
+- [ ] ~~未 approve 嘅課喺 app 完全見唔到~~ — 2026-07-19 起呢條標準已經 moot（見 §6，冇再有「未approve」呢個狀態，AI生成即出街）
 - [ ] 家人分享閂咗之後，仔女端即時睇唔到進度
 - [ ] Lighthouse PWA installable ✅、手機離線開已學課程 ✅
 

@@ -1,6 +1,9 @@
 """Generates the Plan 3 seed-lesson drafts via DeepSeek and writes them into
-Supabase's elder_lessons table as status='pending', for Stephanie to review
-in the admin/ Streamlit app.
+Supabase's elder_lessons table as status='published' -- live immediately,
+no manual review gate (Stephanie's call, 2026-07-19: she trusts DeepSeek's
+output enough to skip the old per-lesson approval step). The admin/
+Streamlit app still exists for retroactively viewing/editing/unpublishing
+a lesson after the fact, it's just no longer a required gate before publish.
 
 Manually triggered only (see ../.github/workflows/generate-lessons.yml,
 workflow_dispatch) -- this script does not run on any recurring schedule.
@@ -140,7 +143,7 @@ def parse_lesson_response(raw_text: str, scenario: Dict[str, Any]) -> Dict[str, 
         "title": data["title"],
         "subtitle": data["subtitle"],
         "steps": steps,
-        "status": "pending",
+        "status": "published",
     }
 
 

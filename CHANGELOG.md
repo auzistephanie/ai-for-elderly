@@ -2,6 +2,13 @@
 
 > 改動記錄出口：新條目一律插喺呢個檔案頂部。CLAUDE.md 只放路由同現行規則。Plan1–5 開發史詳情 → `README.md` + `docs/superpowers/plans/*.md`（唔喺度重複）。
 
+## 2026-07-19 政策改變：內容出街唔再需要人手 approve + 進度頁面加撳掣
+
+- **Stephanie 拍板取消「AI 生成 draft → 人手 approve → 出街」呢條由 Plan3 開始鎖定嘅硬規矩**：佢話信得過 DeepSeek 嘅生成質素，唔想再逐課撳approve。`scripts/generate_lessons.py` 由寫入 `status='pending'` 改做直接 `status='published'`，`admin/app.py`（Streamlit）保留但改做事後補救（睇/edit/unpublish），唔再係出街前必經gate。同步更新咗 `README.md`／`CLAUDE.md`／`AI-elder-app-SPEC.md` §6 三份文件嘅locked decision，`scripts/test_generate_lessons.py` 對應assertion都改咗，9個pytest全過。
+  - 呢個係一個**刻意、明確拍板嘅政策逆轉**，唔係我自己加嘅假設——原本呢條規喺三份文件都寫到明「嚴禁全自動」，執行前已經同Stephanie核實過先做。
+- 「我嘅進度」頁面：撳每一層嘅進度卡而家會帶去「上堂」課堂清單（原本淨係睇下唔撳得），純CSS/JSX改動，`ProgressScreen`嘅layer卡由`<div>`改做`<button>`。185個測試、build、lint全綠。
+- 順手正式寫低一個之前已經有先例但未formalize嘅UI規例例外：裝飾性/品牌chrome文字（Gemini demo header、`.comment-author`）可以細過鎖定嘅22px最細字，正文/按鈕/選項唔受呢個例外影響。
+
 ## 2026-07-19 上線 — portfolio elder section 轉正
 
 Stephanie 確認 app ready，`stephanie-portfolio` elder section 由「◌ 籌備中」轉「● 運作中」，links-row 加咗 `$ open app →`（`https://ai-elder-app.vercel.app`）。詳細改動見 stephanie-portfolio CHANGELOG「elder section 轉正」條目；本檔＋CLAUDE.md「部署」段同步補生產網址。

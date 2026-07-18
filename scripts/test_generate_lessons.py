@@ -41,7 +41,7 @@ class ParseLessonResponseTests(unittest.TestCase):
         self.assertEqual(lesson["layer"], SCENARIO["layer"])
         self.assertEqual(lesson["number"], SCENARIO["number"])
         self.assertEqual(lesson["title"], "第 2 課")
-        self.assertEqual(lesson["status"], "pending")
+        self.assertEqual(lesson["status"], "published")
 
     def test_strips_a_markdown_json_fence(self):
         fenced = "```json\n" + json.dumps(VALID_RESPONSE) + "\n```"

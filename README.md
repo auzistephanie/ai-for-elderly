@@ -24,8 +24,8 @@
 | 出街形式 | 先 PWA（Phase 1）→ 內容跑通後先包原生 App（Phase 2） |
 | 課程結構 | 三層由淺入深（入門→生活應用→進階）＋防騙必修班獨立成章 |
 | 課堂形式 | 每課三步：點解要學 → 睇示範 → 考一考（二選一大掣），每步有「🔊 讀出嚟」 |
-| 內容管道 | AI 生成 draft → Stephanie 人手 approve → 出街，每週 2–3 課，**嚴禁全自動** |
-| UI 鐵律 | 最細字 22px、全程撳掣唔使打字、touch target ≥60px、廣東話鼓勵語氣 |
+| 內容管道 | AI 生成即自動 `status='published'` 出街，每週 2–3 課。**2026-07-19 政策改變**：原本「Stephanie 人手 approve 先出街、嚴禁全自動」由 Stephanie 本人拍板取消——佢信得過 DeepSeek，唔想再逐課撳approve。`admin/` Streamlit 保留，但淨係做事後補救（睇/edit/unpublish），唔再係出街前置關卡 |
+| UI 鐵律 | 最細字 22px（**例外，2026-07-19**：裝飾性/品牌 chrome 文字可以細過22px，例如 Gemini demo header標籤、`.comment-author`，兩者都係20px；正文/按鈕/選項一律照舊≥22px）、全程撳掣唔使打字、touch target ≥60px、廣東話鼓勵語氣 |
 | 家人同行 | Optional，長者可隨時閂分享；仔女睇進度＋留言鼓勵 |
 | 配色 | 米白 #faf8f4 + 深綠 #2f6f4f 主色（landing page 用復古花磚方向） |
 
