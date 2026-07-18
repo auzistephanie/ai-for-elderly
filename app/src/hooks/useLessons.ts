@@ -11,7 +11,11 @@ export function useLessons() {
       .eq('status', 'published')
       .order('layer', { ascending: true })
       .order('number', { ascending: true });
-    if (error) throw new Error(error.message ?? '攞唔到課堂內容');
+    // Never trust error.message verbatim here: this is a generic query with no custom
+    // business-raised text, so error.message can be anything Supabase's client puts there —
+    // including a stringified native exception ("TypeError: Failed to fetch") on a network
+    // failure, which must never reach the user (see lib/errors.ts's toFriendlyMessage).
+    if (error) throw new Error('攞唔到課堂內容');
     return (data ?? []) as Lesson[];
   }, []);
 

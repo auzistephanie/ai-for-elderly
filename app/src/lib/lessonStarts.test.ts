@@ -21,10 +21,10 @@ describe('logLessonStart', () => {
     expect(insert).toHaveBeenCalledWith({ user_id: 'u1', lesson_id: 'l1' });
   });
 
-  it('throws when the insert fails', async () => {
-    const insert = vi.fn().mockResolvedValue({ error: { message: 'boom' } });
+  it('throws a friendly message (not the raw Supabase error) when the insert fails', async () => {
+    const insert = vi.fn().mockResolvedValue({ error: { message: 'TypeError: Failed to fetch' } });
     fromMock.mockReturnValue({ insert });
 
-    await expect(logLessonStart('u1', 'l1')).rejects.toThrow('boom');
+    await expect(logLessonStart('u1', 'l1')).rejects.toThrow('課堂開始紀錄唔到');
   });
 });

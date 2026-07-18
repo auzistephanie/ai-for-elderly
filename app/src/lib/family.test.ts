@@ -34,9 +34,14 @@ describe('redeemPairingCode', () => {
     expect(result).toEqual({ elderUserId: 'e1', elderDisplayName: '陳生' });
   });
 
-  it('throws the database error message on failure', async () => {
+  it('throws the database error message verbatim when it looks like an authored Cantonese business message', async () => {
     rpcMock.mockResolvedValue({ data: null, error: { message: '配對碼過期' } });
     await expect(redeemPairingCode('000000')).rejects.toThrow('配對碼過期');
+  });
+
+  it('falls back to a friendly message instead of leaking a network-failure error verbatim', async () => {
+    rpcMock.mockResolvedValue({ data: null, error: { message: 'TypeError: Failed to fetch' } });
+    await expect(redeemPairingCode('000000')).rejects.toThrow('配對失敗，請再試');
   });
 
   it('throws a distinct message (not "wrong code") when the RPC succeeds but returns no rows', async () => {
@@ -73,21 +78,21 @@ describe('fetchFamilyLink', () => {
     expect(await fetchFamilyLink('fam1')).toEqual({ elderUserId: 'e1', elderDisplayName: '陳生' });
   });
 
-  it('throws (does not silently return null) when the link lookup query errors', async () => {
-    const maybeSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'network down' } });
+  it('throws a friendly message (does not silently return null, does not leak the raw error) when the link lookup query errors', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'TypeError: Failed to fetch' } });
     const eq = vi.fn(() => ({ maybeSingle }));
     const select = vi.fn(() => ({ eq }));
     fromMock.mockReturnValue({ select });
 
-    await expect(fetchFamilyLink('fam1')).rejects.toThrow('network down');
+    await expect(fetchFamilyLink('fam1')).rejects.toThrow('攞唔到配對狀態，請再試');
   });
 
-  it('throws (does not silently return null) when the elder-profile lookup query errors', async () => {
+  it('throws a friendly message (does not silently return null, does not leak the raw error) when the elder-profile lookup query errors', async () => {
     const linkMaybeSingle = vi.fn().mockResolvedValue({ data: { elder_user_id: 'e1' }, error: null });
     const linkEq = vi.fn(() => ({ maybeSingle: linkMaybeSingle }));
     const linkSelect = vi.fn(() => ({ eq: linkEq }));
 
-    const profileMaybeSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'profile lookup failed' } });
+    const profileMaybeSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'TypeError: Failed to fetch' } });
     const profileEq = vi.fn(() => ({ maybeSingle: profileMaybeSingle }));
     const profileSelect = vi.fn(() => ({ eq: profileEq }));
 
@@ -97,6 +102,6 @@ describe('fetchFamilyLink', () => {
       throw new Error(`unexpected table ${table}`);
     });
 
-    await expect(fetchFamilyLink('fam1')).rejects.toThrow('profile lookup failed');
+    await expect(fetchFamilyLink('fam1')).rejects.toThrow('攞唔到長者資料，請再試');
   });
 });

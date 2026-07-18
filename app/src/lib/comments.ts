@@ -20,7 +20,9 @@ export async function fetchComments(elderUserId: string): Promise<FamilyComment[
     .select('id, family_user_id, comment_text, liked, created_at')
     .eq('elder_user_id', elderUserId)
     .order('created_at', { ascending: false });
-  if (error) throw new Error(error.message);
+  // Generic queries, no custom RPC business message ever involved — never trust error.message
+  // verbatim (it can be a stringified native exception on a network failure, see lib/errors.ts).
+  if (error) throw new Error('攞唔到留言，請再試');
   if (!comments || comments.length === 0) return [];
 
   const familyUserIds = [...new Set(comments.map((c: { family_user_id: string }) => c.family_user_id))];
@@ -28,7 +30,7 @@ export async function fetchComments(elderUserId: string): Promise<FamilyComment[
     .from('elder_profiles')
     .select('user_id, display_name')
     .in('user_id', familyUserIds);
-  if (profilesError) throw new Error(profilesError.message);
+  if (profilesError) throw new Error('攞唔到留言，請再試');
 
   const nameByUserId = new Map(
     (profiles ?? []).map((p: { user_id: string; display_name: string | null }) => [p.user_id, p.display_name]),
@@ -53,10 +55,10 @@ export async function postComment(elderUserId: string, commentText: string): Pro
   const { error } = await supabase
     .from('elder_family_comments')
     .insert({ elder_user_id: elderUserId, family_user_id: user.id, comment_text: commentText });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error('送出失敗，請再試');
 }
 
 export async function likeComment(commentId: string): Promise<void> {
   const { error } = await supabase.from('elder_family_comments').update({ liked: true }).eq('id', commentId);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error('撳讚失敗，請再試');
 }

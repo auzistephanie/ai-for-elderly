@@ -69,13 +69,13 @@ describe('fetchComments', () => {
     expect(profilesSelect).not.toHaveBeenCalled();
   });
 
-  it('throws when the comments query errors', async () => {
-    const commentsOrder = vi.fn().mockResolvedValue({ data: null, error: { message: 'boom' } });
+  it('throws a friendly message (not the raw Supabase error) when the comments query errors', async () => {
+    const commentsOrder = vi.fn().mockResolvedValue({ data: null, error: { message: 'TypeError: Failed to fetch' } });
     const commentsEq = vi.fn(() => ({ order: commentsOrder }));
     const commentsSelect = vi.fn(() => ({ eq: commentsEq }));
     fromMock.mockReturnValue({ select: commentsSelect });
 
-    await expect(fetchComments('e1')).rejects.toThrow('boom');
+    await expect(fetchComments('e1')).rejects.toThrow('攞唔到留言，請再試');
   });
 });
 
@@ -97,12 +97,12 @@ describe('postComment', () => {
     await expect(postComment('e1', '好叻呀！')).rejects.toThrow('not authenticated');
   });
 
-  it('throws when the insert fails', async () => {
+  it('throws a friendly message (not the raw Supabase error) when the insert fails', async () => {
     getUserMock.mockResolvedValue({ data: { user: { id: 'f1' } } });
-    const insert = vi.fn().mockResolvedValue({ error: { message: 'boom' } });
+    const insert = vi.fn().mockResolvedValue({ error: { message: 'TypeError: Failed to fetch' } });
     fromMock.mockReturnValue({ insert });
 
-    await expect(postComment('e1', '好叻呀！')).rejects.toThrow('boom');
+    await expect(postComment('e1', '好叻呀！')).rejects.toThrow('送出失敗，請再試');
   });
 });
 
@@ -120,11 +120,11 @@ describe('likeComment', () => {
     expect(eq).toHaveBeenCalledWith('id', 'c1');
   });
 
-  it('throws when the update fails', async () => {
-    const eq = vi.fn().mockResolvedValue({ error: { message: 'boom' } });
+  it('throws a friendly message (not the raw Supabase error) when the update fails', async () => {
+    const eq = vi.fn().mockResolvedValue({ error: { message: 'TypeError: Failed to fetch' } });
     const update = vi.fn(() => ({ eq }));
     fromMock.mockReturnValue({ update });
 
-    await expect(likeComment('c1')).rejects.toThrow('boom');
+    await expect(likeComment('c1')).rejects.toThrow('撳讚失敗，請再試');
   });
 });

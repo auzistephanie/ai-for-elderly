@@ -42,9 +42,11 @@ describe('useLessons', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('exposes an error instead of silently reporting zero lessons when the query fails', async () => {
+  it('exposes a friendly error instead of silently reporting zero lessons when the query fails', async () => {
+    // error.message is never trusted verbatim for this generic query (could be a stringified
+    // native exception from a network failure) — the friendly fallback always wins instead.
     const then = (cb: (result: { data: unknown; error: unknown }) => void) =>
-      cb({ data: null, error: { message: 'network down' } });
+      cb({ data: null, error: { message: 'TypeError: Failed to fetch' } });
     const order2 = vi.fn(() => ({ then }));
     const order1 = vi.fn(() => ({ order: order2 }));
     const eq = vi.fn(() => ({ order: order1 }));
@@ -54,7 +56,7 @@ describe('useLessons', () => {
     const { result } = renderHook(() => useLessons());
 
     await waitFor(() => expect(result.current.loaded).toBe(true));
-    expect(result.current.error).toBe('network down');
+    expect(result.current.error).toBe('攞唔到課堂內容');
     expect(result.current.lessons).toEqual([]);
   });
 
