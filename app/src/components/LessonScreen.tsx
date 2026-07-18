@@ -1,15 +1,24 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Lesson } from '../types/lesson';
 import { SpeakButton } from './SpeakButton';
+import { logLessonStart } from '../lib/lessonStarts';
 
 interface LessonScreenProps {
   lesson: Lesson;
+  userId: string;
   onComplete: () => void;
 }
 
-export function LessonScreen({ lesson, onComplete }: LessonScreenProps) {
+export function LessonScreen({ lesson, userId, onComplete }: LessonScreenProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Best-effort analytics: a failed write here must never block the lesson itself, and
+    // there's nothing actionable for the user to do about it, so it's silently swallowed
+    // rather than shown as an error (unlike user-initiated actions elsewhere in this app).
+    logLessonStart(userId, lesson.id).catch(() => {});
+  }, [lesson.id, userId]);
 
   const step = lesson.steps[stepIndex];
   const quizStep = step.kind === 'quiz' ? step : null;

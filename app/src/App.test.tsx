@@ -31,6 +31,10 @@ vi.mock('./lib/progressApi', () => ({
   fetchProgress: (...args: unknown[]) => fetchProgressMock(...args),
 }));
 
+vi.mock('./lib/lessonStarts', () => ({
+  logLessonStart: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { App } from './App';
 import type { Lesson } from './types/lesson';
 

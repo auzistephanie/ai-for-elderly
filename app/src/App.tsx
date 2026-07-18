@@ -86,6 +86,7 @@ function ElderShell({ userId }: { userId: string }) {
       {screen === 'lesson' && activeLesson && (
         <LessonScreen
           lesson={activeLesson}
+          userId={userId}
           onComplete={() => {
             completeLesson(activeLesson.id);
             navigate('progress');

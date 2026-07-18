@@ -1,12 +1,24 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
+
+const logLessonStartMock = vi.fn();
+vi.mock('../lib/lessonStarts', () => ({
+  logLessonStart: (...args: unknown[]) => logLessonStartMock(...args),
+}));
+
 import { LessonScreen } from './LessonScreen';
 import { seedLesson } from '../data/seedLesson';
 
 describe('LessonScreen', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    logLessonStartMock.mockResolvedValue(undefined);
+  });
+
   it('walks through all three steps and only completes after the correct quiz answer', async () => {
     const onComplete = vi.fn();
-    render(<LessonScreen lesson={seedLesson} onComplete={onComplete} />);
+    render(<LessonScreen lesson={seedLesson} userId="u1" onComplete={onComplete} />);
 
     // Step 1: why
     expect(screen.getByText('點解要學呢樣嘢？')).toBeInTheDocument();
@@ -33,7 +45,7 @@ describe('LessonScreen', () => {
 
   it('does not reveal the correct/wrong icon before an option is clicked', async () => {
     const onComplete = vi.fn();
-    render(<LessonScreen lesson={seedLesson} onComplete={onComplete} />);
+    render(<LessonScreen lesson={seedLesson} userId="u1" onComplete={onComplete} />);
 
     await userEvent.click(screen.getByText('下一步 ▶'));
     await userEvent.click(screen.getByText('下一步 ▶'));
@@ -42,5 +54,10 @@ describe('LessonScreen', () => {
     expect(screen.getByText('AI 話你知藥物資料之後，你應該——')).toBeInTheDocument();
     expect(screen.queryByText('✅')).not.toBeInTheDocument();
     expect(screen.queryByText('❌')).not.toBeInTheDocument();
+  });
+
+  it('logs a lesson start on mount', () => {
+    render(<LessonScreen lesson={seedLesson} userId="u1" onComplete={vi.fn()} />);
+    expect(logLessonStartMock).toHaveBeenCalledWith('u1', seedLesson.id);
   });
 });
