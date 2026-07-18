@@ -139,9 +139,12 @@ Stephanie 嘅電腦本機路徑：`~/Desktop/Stephanie-Google Drive/dev/`
 
 ## 部署現況
 
-- **PWA (`app/`)**：已經有 Vercel deployment，production URL：
-  https://app-delta-two-31.vercel.app（Vercel 自動派嘅預設域名，唔係自訂 domain）。
-  Project 名叫「app」，掛喺 Vercel account `auzistephanies-projects` 度。
+- **PWA (`app/`)**：已經有 Vercel deployment，掛喺 Vercel account `auzistephanies-projects` 度，
+  project 已改名做「ai-elder-app」（原本叫「app」，2026-07-19 改名）。
+  - Production URL（正常用呢個）：https://app-delta-two-31.vercel.app
+  - 跟新名開嘅 alias `https://ai-elder-app.vercel.app` 而家俾 Vercel team 級 SSO
+    protection（`all_except_custom_domains`）擋住，未係公開連結——想要嘅話要
+    另外請 Stephanie 拍板放行呢個 domain，定係揀自訂 domain（見下面未決事項）。
 - **Landing page (`ai-elder-landing.html`)**：未部署。
 
 ## 未決事項（要 Stephanie 之後拍板）
