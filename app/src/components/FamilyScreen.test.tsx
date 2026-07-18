@@ -23,10 +23,19 @@ describe('FamilyScreen', () => {
   });
 
   it('toggles share via the callback', async () => {
-    const onToggleShare = vi.fn();
+    const onToggleShare = vi.fn().mockResolvedValue(undefined);
     render(<FamilyScreen shareEnabled={true} onToggleShare={onToggleShare} userId="u1" />);
     await userEvent.click(screen.getByRole('button', { name: '' }));
     expect(onToggleShare).toHaveBeenCalledWith(false);
+  });
+
+  it('shows an inline error when toggling share fails', async () => {
+    const onToggleShare = vi.fn().mockRejectedValue(new Error('設定失敗，請再試'));
+    render(<FamilyScreen shareEnabled={true} onToggleShare={onToggleShare} userId="u1" />);
+
+    await userEvent.click(screen.getByRole('button', { name: '' }));
+
+    expect(await screen.findByText('設定失敗，請再試')).toBeInTheDocument();
   });
 
   it('generates and displays a pairing code on tap', async () => {

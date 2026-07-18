@@ -41,17 +41,15 @@ describe('toE164', () => {
 describe('requestOtp', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('calls signInWithOtp with the normalized phone and returns no error on success', async () => {
+  it('calls signInWithOtp with the normalized phone on success', async () => {
     signInWithOtpMock.mockResolvedValue({ error: null });
-    const result = await requestOtp('91234567');
+    await requestOtp('91234567');
     expect(signInWithOtpMock).toHaveBeenCalledWith({ phone: '+85291234567' });
-    expect(result.error).toBeNull();
   });
 
-  it('surfaces the error message on failure', async () => {
+  it('throws a friendly message on failure', async () => {
     signInWithOtpMock.mockResolvedValue({ error: { message: 'boom' } });
-    const result = await requestOtp('91234567');
-    expect(result.error).toBe('boom');
+    await expect(requestOtp('91234567')).rejects.toThrow('傳送失敗，check 下電話號碼啱唔啱');
   });
 });
 
@@ -74,11 +72,15 @@ describe('fetchDisplayedOtp', () => {
 describe('verifyOtp', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('calls supabase verifyOtp with the sms type', async () => {
+  it('calls supabase verifyOtp with the sms type on success', async () => {
     verifyOtpMock.mockResolvedValue({ error: null });
-    const result = await verifyOtp('91234567', '561166');
+    await verifyOtp('91234567', '561166');
     expect(verifyOtpMock).toHaveBeenCalledWith({ phone: '+85291234567', token: '561166', type: 'sms' });
-    expect(result.error).toBeNull();
+  });
+
+  it('throws a friendly message on failure', async () => {
+    verifyOtpMock.mockResolvedValue({ error: { message: 'boom' } });
+    await expect(verifyOtp('91234567', '561166')).rejects.toThrow('驗證失敗，撳返去重新傳送');
   });
 });
 

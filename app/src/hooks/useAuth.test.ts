@@ -48,6 +48,20 @@ describe('useAuth', () => {
     expect(result.current.role).toBe('elder');
   });
 
+  it('treats a role-query error the same as no role found, rather than crashing or hanging', async () => {
+    getSessionMock.mockResolvedValue({ data: { session: { user: { id: 'u1' } } } });
+    const maybeSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'network down' } });
+    const eq = vi.fn(() => ({ maybeSingle }));
+    const select = vi.fn(() => ({ eq }));
+    fromMock.mockReturnValue({ select });
+
+    const { result } = renderHook(() => useAuth());
+
+    await waitFor(() => expect(result.current.status).toBe('signed-in'));
+    expect(result.current.userId).toBe('u1');
+    expect(result.current.role).toBeNull();
+  });
+
   it('does not let a stale role fetch overwrite a later sign-out', async () => {
     getSessionMock.mockResolvedValue({ data: { session: { user: { id: 'u1' } } } });
 

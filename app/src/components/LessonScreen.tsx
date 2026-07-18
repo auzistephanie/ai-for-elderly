@@ -7,9 +7,10 @@ interface LessonScreenProps {
   lesson: Lesson;
   userId: string;
   onComplete: () => void;
+  completeError?: string | null;
 }
 
-export function LessonScreen({ lesson, userId, onComplete }: LessonScreenProps) {
+export function LessonScreen({ lesson, userId, onComplete, completeError }: LessonScreenProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
@@ -93,9 +94,12 @@ export function LessonScreen({ lesson, userId, onComplete }: LessonScreenProps) 
               </div>
             )}
             {answeredCorrect && (
-              <button className="bigbtn next-btn" onClick={onComplete}>
-                <span>完成課堂 🎉</span>
-              </button>
+              <>
+                {completeError && <p className="error-text">{completeError}</p>}
+                <button className="bigbtn next-btn" onClick={onComplete}>
+                  <span>完成課堂 🎉</span>
+                </button>
+              </>
             )}
           </>
         )}

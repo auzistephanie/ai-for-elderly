@@ -60,6 +60,23 @@ const seedLesson: Lesson = {
   ],
 };
 
+const layer1: Lesson = { ...seedLesson, id: 'l1', layer: 1, number: 1, subtitle: '第一層課' };
+const layer2: Lesson = { ...seedLesson, id: 'l2', layer: 2, number: 4, subtitle: '第二層課' };
+const antiFraud: Lesson = { ...seedLesson, id: 'af', layer: 0, number: 1, subtitle: '防騙課' };
+
+function mockElder(lessons: Lesson[], completedLessonIds: string[]) {
+  useAuthMock.mockReturnValue({ status: 'signed-in', userId: 'u1', role: 'elder' });
+  useLessonsMock.mockReturnValue({ lessons, loaded: true, error: null, reload: vi.fn() });
+  useProgressMock.mockReturnValue({
+    state: { completedLessonIds, streakCount: 3, lastActiveDate: '2026-07-17', familyShareEnabled: true },
+    loaded: true,
+    progressError: null,
+    reloadProgress: vi.fn(),
+    completeLesson: vi.fn(),
+    setFamilyShare: vi.fn(),
+  });
+}
+
 describe('App auth gate', () => {
   beforeEach(() => vi.clearAllMocks());
 
@@ -69,6 +86,8 @@ describe('App auth gate', () => {
     useProgressMock.mockReturnValue({
       state: { completedLessonIds: [], streakCount: 0, lastActiveDate: null, familyShareEnabled: true },
       loaded: false,
+      progressError: null,
+      reloadProgress: vi.fn(),
       completeLesson: vi.fn(),
       setFamilyShare: vi.fn(),
     });
@@ -83,6 +102,8 @@ describe('App auth gate', () => {
     useProgressMock.mockReturnValue({
       state: { completedLessonIds: [], streakCount: 2, lastActiveDate: '2026-07-17', familyShareEnabled: true },
       loaded: true,
+      progressError: null,
+      reloadProgress: vi.fn(),
       completeLesson: vi.fn(),
       setFamilyShare: vi.fn(),
     });
@@ -97,6 +118,8 @@ describe('App auth gate', () => {
     useProgressMock.mockReturnValue({
       state: { completedLessonIds: [], streakCount: 0, lastActiveDate: null, familyShareEnabled: true },
       loaded: false,
+      progressError: null,
+      reloadProgress: vi.fn(),
       completeLesson: vi.fn(),
       setFamilyShare: vi.fn(),
     });
@@ -113,6 +136,8 @@ describe('App auth gate', () => {
     useProgressMock.mockReturnValue({
       state: { completedLessonIds: [], streakCount: 0, lastActiveDate: null, familyShareEnabled: true },
       loaded: true,
+      progressError: null,
+      reloadProgress: vi.fn(),
       completeLesson: vi.fn(),
       setFamilyShare: vi.fn(),
     });
@@ -123,12 +148,57 @@ describe('App auth gate', () => {
     expect(reloadMock).toHaveBeenCalledTimes(1);
   });
 
+  it('shows an error+retry message when useProgress fails to load, and retry calls reloadProgress()', async () => {
+    useAuthMock.mockReturnValue({ status: 'signed-in', userId: 'u1', role: 'elder' });
+    useLessonsMock.mockReturnValue({ lessons: [], loaded: true, error: null, reload: vi.fn() });
+    const reloadProgressMock = vi.fn();
+    useProgressMock.mockReturnValue({
+      state: { completedLessonIds: [], streakCount: 0, lastActiveDate: null, familyShareEnabled: true },
+      loaded: true,
+      progressError: '攞唔到進度，請再試',
+      reloadProgress: reloadProgressMock,
+      completeLesson: vi.fn(),
+      setFamilyShare: vi.fn(),
+    });
+
+    render(<App />);
+    expect(screen.getByText('攞唔到進度，請再試')).toBeInTheDocument();
+    await userEvent.click(screen.getByText('再試一次'));
+    expect(reloadProgressMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('completing a lesson that fails shows an inline error and does not navigate to the progress tab', async () => {
+    mockElder([layer1], []);
+    const completeLessonMock = vi.fn().mockRejectedValue(new Error('完成課堂紀錄唔到，請再試'));
+    useProgressMock.mockReturnValue({
+      state: { completedLessonIds: [], streakCount: 0, lastActiveDate: null, familyShareEnabled: true },
+      loaded: true,
+      progressError: null,
+      reloadProgress: vi.fn(),
+      completeLesson: completeLessonMock,
+      setFamilyShare: vi.fn(),
+    });
+
+    render(<App />);
+    await userEvent.click(screen.getByText('開始上堂 ▶'));
+    await userEvent.click(screen.getByText('下一步 ▶'));
+    await userEvent.click(screen.getByText('下一步 ▶'));
+    await userEvent.click(screen.getByText('A'));
+    await userEvent.click(screen.getByText('完成課堂 🎉'));
+
+    expect(await screen.findByText('完成課堂紀錄唔到，請再試')).toBeInTheDocument();
+    // Still on LessonScreen, not navigated to the progress tab.
+    expect(screen.getByText('完成課堂 🎉')).toBeInTheDocument();
+  });
+
   it('shows an error+retry message when fetchFamilyLink rejects, and retry re-invokes it', async () => {
     useAuthMock.mockReturnValue({ status: 'signed-in', userId: 'fam1', role: 'family' });
     useLessonsMock.mockReturnValue({ lessons: [], loaded: true, error: null, reload: vi.fn() });
     useProgressMock.mockReturnValue({
       state: { completedLessonIds: [], streakCount: 0, lastActiveDate: null, familyShareEnabled: true },
       loaded: false,
+      progressError: null,
+      reloadProgress: vi.fn(),
       completeLesson: vi.fn(),
       setFamilyShare: vi.fn(),
     });
@@ -148,6 +218,8 @@ describe('App auth gate', () => {
     useProgressMock.mockReturnValue({
       state: { completedLessonIds: [], streakCount: 0, lastActiveDate: null, familyShareEnabled: true },
       loaded: false,
+      progressError: null,
+      reloadProgress: vi.fn(),
       completeLesson: vi.fn(),
       setFamilyShare: vi.fn(),
     });
@@ -169,6 +241,8 @@ describe('App auth gate', () => {
     useProgressMock.mockReturnValue({
       state: { completedLessonIds: [], streakCount: 0, lastActiveDate: null, familyShareEnabled: true },
       loaded: false,
+      progressError: null,
+      reloadProgress: vi.fn(),
       completeLesson: vi.fn(),
       setFamilyShare: vi.fn(),
     });
@@ -181,21 +255,6 @@ describe('App auth gate', () => {
 
 describe('App course engine (elder)', () => {
   beforeEach(() => vi.clearAllMocks());
-
-  const layer1: Lesson = { ...seedLesson, id: 'l1', layer: 1, number: 1, subtitle: '第一層課' };
-  const layer2: Lesson = { ...seedLesson, id: 'l2', layer: 2, number: 4, subtitle: '第二層課' };
-  const antiFraud: Lesson = { ...seedLesson, id: 'af', layer: 0, number: 1, subtitle: '防騙課' };
-
-  function mockElder(lessons: Lesson[], completedLessonIds: string[]) {
-    useAuthMock.mockReturnValue({ status: 'signed-in', userId: 'u1', role: 'elder' });
-    useLessonsMock.mockReturnValue({ lessons, loaded: true, error: null, reload: vi.fn() });
-    useProgressMock.mockReturnValue({
-      state: { completedLessonIds, streakCount: 3, lastActiveDate: '2026-07-17', familyShareEnabled: true },
-      loaded: true,
-      completeLesson: vi.fn(),
-      setFamilyShare: vi.fn(),
-    });
-  }
 
   // HomeScreen's own "上堂" quick-action button label shares its exact text with the NavBar's
   // "上堂" tab (RTL's default text matcher reads each element's own direct text node, and both

@@ -10,9 +10,9 @@ export function toE164(phone: string): string {
   return `+852${digits}`;
 }
 
-export async function requestOtp(phone: string): Promise<{ error: string | null }> {
+export async function requestOtp(phone: string): Promise<void> {
   const { error } = await supabase.auth.signInWithOtp({ phone: toE164(phone) });
-  return { error: error?.message ?? null };
+  if (error) throw new Error('傳送失敗，check 下電話號碼啱唔啱');
 }
 
 export async function fetchDisplayedOtp(phone: string): Promise<string | null> {
@@ -21,9 +21,9 @@ export async function fetchDisplayedOtp(phone: string): Promise<string | null> {
   return (data as string | null) ?? null;
 }
 
-export async function verifyOtp(phone: string, code: string): Promise<{ error: string | null }> {
+export async function verifyOtp(phone: string, code: string): Promise<void> {
   const { error } = await supabase.auth.verifyOtp({ phone: toE164(phone), token: code, type: 'sms' });
-  return { error: error?.message ?? null };
+  if (error) throw new Error('驗證失敗，撳返去重新傳送');
 }
 
 export async function ensureProfile(chosenRole: UserRole, displayName: string): Promise<UserRole> {

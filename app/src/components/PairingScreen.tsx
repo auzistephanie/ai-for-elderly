@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { redeemPairingCode } from '../lib/family';
+import { useAsyncAction } from '../hooks/useAsyncAction';
 
 interface PairingScreenProps {
   onPaired: (elder: { elderUserId: string; elderDisplayName: string | null }) => void;
@@ -7,22 +8,10 @@ interface PairingScreenProps {
 
 export function PairingScreen({ onPaired }: PairingScreenProps) {
   const [code, setCode] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  async function handlePair() {
-    if (busy) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const elder = await redeemPairingCode(code);
-      onPaired(elder);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '配對失敗');
-    } finally {
-      setBusy(false);
-    }
-  }
+  const { run, busy, error } = useAsyncAction(async () => {
+    const elder = await redeemPairingCode(code);
+    onPaired(elder);
+  }, '配對失敗');
 
   return (
     <div className="screen">
@@ -40,7 +29,7 @@ export function PairingScreen({ onPaired }: PairingScreenProps) {
           placeholder="配對碼"
         />
         {error && <p className="error-text">{error}</p>}
-        <button className="bigbtn" disabled={busy || code.length < 6} onClick={handlePair}>
+        <button className="bigbtn" disabled={busy || code.length < 6} onClick={() => run()}>
           {busy ? '配對緊…' : '配對'}
         </button>
       </div>

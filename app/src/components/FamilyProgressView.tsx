@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { fetchProgress, type RemoteProgress } from '../lib/progressApi';
 import { fetchComments, postComment, type FamilyComment } from '../lib/comments';
 import { CommentList } from './CommentList';
+import { useAsyncData } from '../hooks/useAsyncData';
+import { useAsyncAction } from '../hooks/useAsyncAction';
 
 interface FamilyProgressViewProps {
   elderUserId: string;
@@ -9,81 +11,47 @@ interface FamilyProgressViewProps {
 }
 
 export function FamilyProgressView({ elderUserId, elderDisplayName }: FamilyProgressViewProps) {
-  const [progress, setProgress] = useState<RemoteProgress | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [reloadToken, setReloadToken] = useState(0);
+  const progressFetcher = useCallback(() => fetchProgress(elderUserId), [elderUserId]);
+  const {
+    data: progress,
+    error: progressError,
+    busy: progressBusy,
+    reload: reloadProgress,
+  } = useAsyncData<RemoteProgress>(progressFetcher, [elderUserId], '攞唔到進度，請再試');
 
-  const [comments, setComments] = useState<FamilyComment[]>([]);
-  const [commentsError, setCommentsError] = useState<string | null>(null);
+  const commentsFetcher = useCallback(() => {
+    if (!progress?.familyShareEnabled) return Promise.resolve<FamilyComment[]>([]);
+    return fetchComments(elderUserId);
+  }, [elderUserId, progress?.familyShareEnabled]);
+  const {
+    data: comments,
+    error: commentsError,
+    setData: setComments,
+  } = useAsyncData<FamilyComment[]>(
+    commentsFetcher,
+    [elderUserId, progress?.familyShareEnabled],
+    '攞唔到留言，請再試',
+  );
+
   const [commentText, setCommentText] = useState('');
-  const [posting, setPosting] = useState(false);
-  const [postError, setPostError] = useState<string | null>(null);
+  const postAction = useAsyncAction(async () => {
+    if (!commentText.trim()) return;
+    await postComment(elderUserId, commentText.trim());
+    setCommentText('');
+    const updated = await fetchComments(elderUserId);
+    setComments(updated);
+  }, '送出失敗，請再試');
 
-  useEffect(() => {
-    let active = true;
-    setBusy(true);
-    fetchProgress(elderUserId)
-      .then((result) => {
-        if (active) {
-          setProgress(result);
-          setError(null);
-        }
-      })
-      .catch((err) => {
-        if (active) setError(err instanceof Error ? err.message : '攞唔到進度，請再試');
-      })
-      .finally(() => {
-        if (active) setBusy(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [elderUserId, reloadToken]);
-
-  useEffect(() => {
-    if (!progress?.familyShareEnabled) return;
-    let active = true;
-    fetchComments(elderUserId)
-      .then((result) => {
-        if (active) setComments(result);
-      })
-      .catch((err) => {
-        if (active) setCommentsError(err instanceof Error ? err.message : '攞唔到留言，請再試');
-      });
-    return () => {
-      active = false;
-    };
-  }, [elderUserId, progress?.familyShareEnabled, reloadToken]);
-
-  const handleRetry = useCallback(() => setReloadToken((n) => n + 1), []);
-
-  async function handlePostComment() {
-    if (posting || !commentText.trim()) return;
-    setPosting(true);
-    setPostError(null);
-    try {
-      await postComment(elderUserId, commentText.trim());
-      setCommentText('');
-      const updated = await fetchComments(elderUserId);
-      setComments(updated);
-    } catch (err) {
-      setPostError(err instanceof Error ? err.message : '送出失敗，請再試');
-    } finally {
-      setPosting(false);
-    }
-  }
-
-  if (error) {
+  if (progressError) {
     return (
       <div className="screen">
         <div className="topbar">
           <h2>{elderDisplayName ?? '長者'}嘅進度</h2>
         </div>
         <div className="fam-card">
-          <p className="error-text">攞唔到進度：{error}</p>
-          <button className="bigbtn" disabled={busy} onClick={handleRetry}>
-            {busy ? '再試緊…' : '再試一次'}
+          <p className="error-text">攞唔到進度：{progressError}</p>
+          <button className="bigbtn" disabled={progressBusy} onClick={reloadProgress}>
+            {progressBusy ? '再試緊…' : '再試一次'}
           </button>
         </div>
       </div>
@@ -122,14 +90,14 @@ export function FamilyProgressView({ elderUserId, elderDisplayName }: FamilyProg
           onChange={(e) => setCommentText(e.target.value)}
           placeholder="寫幾句鼓勵嘅說話…"
         />
-        {postError && <p className="error-text">{postError}</p>}
-        <button className="bigbtn" disabled={posting || !commentText.trim()} onClick={handlePostComment}>
-          {posting ? '送緊出…' : '送出鼓勵'}
+        {postAction.error && <p className="error-text">{postAction.error}</p>}
+        <button className="bigbtn" disabled={postAction.busy || !commentText.trim()} onClick={() => postAction.run()}>
+          {postAction.busy ? '送緊出…' : '送出鼓勵'}
         </button>
       </div>
       <div className="fam-card">
         <h4>留言紀錄</h4>
-        <CommentList comments={comments} error={commentsError} emptyText="仲未有留言" />
+        <CommentList comments={comments ?? []} error={commentsError} emptyText="仲未有留言" />
       </div>
     </div>
   );

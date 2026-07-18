@@ -22,13 +22,17 @@ export function useAuth() {
     async function resolve(userId: string) {
       requestId += 1;
       const myRequestId = requestId;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('elder_profiles')
         .select('role')
         .eq('user_id', userId)
         .maybeSingle();
       if (!active || myRequestId !== requestId) return;
-      setState({ status: 'signed-in', userId, role: (data?.role as UserRole) ?? null });
+      // A query error is treated the same as "no role row yet" rather than a separate error
+      // state — App.tsx already renders a full error+retry screen whenever role is null
+      // (it can't tell "signup didn't finish" from "the lookup itself failed", and doesn't
+      // need to: both cases dead-end the same way, "attempt again").
+      setState({ status: 'signed-in', userId, role: error ? null : ((data?.role as UserRole) ?? null) });
     }
 
     function clearSession() {

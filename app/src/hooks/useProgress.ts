@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import { fetchProgress, markLessonCompleted, setFamilyShareEnabled, touchStreak } from '../lib/progressApi';
+import { useAsyncData } from './useAsyncData';
 
 export interface Badge {
   id: string;
@@ -53,48 +54,45 @@ export function computeBadges(state: {
 }
 
 export function useProgress(userId: string | null) {
-  const [state, setState] = useState<ProgressState>(defaultState);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    if (!userId) return;
-    let active = true;
-
-    (async () => {
-      const remote = await fetchProgress(userId);
-      const today = todayISO();
-      let next = remote;
-      if (remote.lastActiveDate !== today) {
-        const touched = await touchStreak(userId, today, calcStreak);
-        next = { ...remote, streakCount: touched.streakCount, lastActiveDate: touched.lastActiveDate };
-      }
-      if (!active) return;
-      setState(next);
-      setLoaded(true);
-    })();
-
-    return () => {
-      active = false;
-    };
+  const fetcher = useCallback(async (): Promise<ProgressState> => {
+    if (!userId) return defaultState;
+    const remote = await fetchProgress(userId);
+    const today = todayISO();
+    if (remote.lastActiveDate === today) return remote;
+    const touched = await touchStreak(userId, today, calcStreak);
+    return { ...remote, streakCount: touched.streakCount, lastActiveDate: touched.lastActiveDate };
   }, [userId]);
+
+  const {
+    data,
+    error: progressError,
+    loaded,
+    reload: reloadProgress,
+    setData,
+  } = useAsyncData<ProgressState>(fetcher, [userId], '攞唔到進度，請再試');
+
+  const state = data ?? defaultState;
 
   const completeLesson = useCallback(
     async (lessonId: string) => {
       if (!userId || state.completedLessonIds.includes(lessonId)) return;
       await markLessonCompleted(userId, lessonId);
-      setState((prev) => ({ ...prev, completedLessonIds: [...prev.completedLessonIds, lessonId] }));
+      setData((prev) => ({
+        ...(prev ?? defaultState),
+        completedLessonIds: [...(prev ?? defaultState).completedLessonIds, lessonId],
+      }));
     },
-    [userId, state.completedLessonIds],
+    [userId, state.completedLessonIds, setData],
   );
 
   const setFamilyShare = useCallback(
     async (enabled: boolean) => {
       if (!userId) return;
       await setFamilyShareEnabled(userId, enabled);
-      setState((prev) => ({ ...prev, familyShareEnabled: enabled }));
+      setData((prev) => ({ ...(prev ?? defaultState), familyShareEnabled: enabled }));
     },
-    [userId],
+    [userId, setData],
   );
 
-  return { state, loaded, completeLesson, setFamilyShare };
+  return { state, loaded, progressError, reloadProgress, completeLesson, setFamilyShare };
 }

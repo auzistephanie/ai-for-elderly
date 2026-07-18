@@ -1,3 +1,4 @@
+// src/hooks/useProgress.test.ts
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import { calcStreak, computeBadges, todayISO } from './useProgress';
@@ -66,6 +67,7 @@ describe('useProgress', () => {
     expect(touchStreakMock).toHaveBeenCalledWith('u1', todayISO(), calcStreak);
     expect(result.current.state.streakCount).toBe(4);
     expect(result.current.state.completedLessonIds).toEqual(['l1']);
+    expect(result.current.progressError).toBeNull();
   });
 
   it('does not re-touch the streak when already active today', async () => {
@@ -83,7 +85,25 @@ describe('useProgress', () => {
     expect(result.current.state.streakCount).toBe(2);
   });
 
-  it('completeLesson calls markLessonCompleted and updates local state once the write succeeds', async () => {
+  it('exposes progressError and a working reloadProgress when the initial fetch fails', async () => {
+    fetchProgressMock.mockRejectedValueOnce(new Error('攞唔到進度，請再試'));
+
+    const { result } = renderHook(() => useProgress('u1'));
+    await waitFor(() => expect(result.current.progressError).toBe('攞唔到進度，請再試'));
+
+    fetchProgressMock.mockResolvedValueOnce({
+      completedLessonIds: [],
+      streakCount: 0,
+      lastActiveDate: todayISO(),
+      familyShareEnabled: true,
+    });
+
+    act(() => result.current.reloadProgress());
+    await waitFor(() => expect(result.current.progressError).toBeNull());
+    expect(fetchProgressMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('completeLesson calls markLessonCompleted and optimistically updates local state once the write succeeds', async () => {
     fetchProgressMock.mockResolvedValue({
       completedLessonIds: [],
       streakCount: 0,
@@ -101,9 +121,26 @@ describe('useProgress', () => {
 
     expect(markLessonCompletedMock).toHaveBeenCalledWith('u1', 'l9');
     expect(result.current.state.completedLessonIds).toContain('l9');
+    expect(fetchProgressMock).toHaveBeenCalledTimes(1); // optimistic update, no refetch
   });
 
-  it('setFamilyShare calls setFamilyShareEnabled and updates local state', async () => {
+  it('completeLesson propagates the thrown error (caller decides how to show it)', async () => {
+    fetchProgressMock.mockResolvedValue({
+      completedLessonIds: [],
+      streakCount: 0,
+      lastActiveDate: todayISO(),
+      familyShareEnabled: true,
+    });
+    markLessonCompletedMock.mockRejectedValue(new Error('完成課堂紀錄唔到，請再試'));
+
+    const { result } = renderHook(() => useProgress('u1'));
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+
+    await expect(result.current.completeLesson('l9')).rejects.toThrow('完成課堂紀錄唔到，請再試');
+    expect(result.current.state.completedLessonIds).not.toContain('l9');
+  });
+
+  it('setFamilyShare calls setFamilyShareEnabled and optimistically updates local state', async () => {
     fetchProgressMock.mockResolvedValue({
       completedLessonIds: [],
       streakCount: 0,
@@ -121,5 +158,6 @@ describe('useProgress', () => {
 
     expect(setFamilyShareEnabledMock).toHaveBeenCalledWith('u1', false);
     expect(result.current.state.familyShareEnabled).toBe(false);
+    expect(fetchProgressMock).toHaveBeenCalledTimes(1); // optimistic update, no refetch
   });
 });

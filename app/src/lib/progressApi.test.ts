@@ -62,7 +62,7 @@ describe('fetchProgress', () => {
       throw new Error(`unexpected table ${table}`);
     });
 
-    await expect(fetchProgress('u1')).rejects.toEqual({ message: 'boom' });
+    await expect(fetchProgress('u1')).rejects.toThrow('攞唔到進度，請再試');
   });
 });
 
@@ -78,11 +78,11 @@ describe('markLessonCompleted', () => {
     );
   });
 
-  it('throws when the upsert returns an error', async () => {
+  it('throws a friendly Error (not the raw Supabase error) when the upsert returns an error', async () => {
     const upsert = vi.fn().mockResolvedValue({ error: { message: 'boom' } });
     fromMock.mockReturnValue({ upsert });
 
-    await expect(markLessonCompleted('u1', 'l1')).rejects.toEqual({ message: 'boom' });
+    await expect(markLessonCompleted('u1', 'l1')).rejects.toThrow('完成課堂紀錄唔到，請再試');
   });
 });
 
@@ -119,7 +119,7 @@ describe('touchStreak', () => {
     );
   });
 
-  it('throws when the upsert returns an error', async () => {
+  it('throws a friendly Error (not the raw Supabase error) when the upsert returns an error', async () => {
     const maybeSingle = vi.fn().mockResolvedValue({ data: { streak_count: 4, last_active_date: '2026-07-15' } });
     const eq = vi.fn(() => ({ maybeSingle }));
     const select = vi.fn(() => ({ eq }));
@@ -127,7 +127,7 @@ describe('touchStreak', () => {
     fromMock.mockReturnValue({ select, upsert });
 
     const calcStreak = vi.fn().mockReturnValue(5);
-    await expect(touchStreak('u1', '2026-07-16', calcStreak)).rejects.toEqual({ message: 'boom' });
+    await expect(touchStreak('u1', '2026-07-16', calcStreak)).rejects.toThrow('攞唔到進度，請再試');
   });
 });
 
@@ -142,11 +142,11 @@ describe('setFamilyShareEnabled', () => {
     expect(eq).toHaveBeenCalledWith('user_id', 'u1');
   });
 
-  it('throws when the update returns an error', async () => {
+  it('throws a friendly Error (not the raw Supabase error) when the update returns an error', async () => {
     const eq = vi.fn().mockResolvedValue({ error: { message: 'boom' } });
     const update = vi.fn(() => ({ eq }));
     fromMock.mockReturnValue({ update });
 
-    await expect(setFamilyShareEnabled('u1', false)).rejects.toEqual({ message: 'boom' });
+    await expect(setFamilyShareEnabled('u1', false)).rejects.toThrow('設定失敗，請再試');
   });
 });

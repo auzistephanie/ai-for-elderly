@@ -60,4 +60,17 @@ describe('LessonScreen', () => {
     render(<LessonScreen lesson={seedLesson} userId="u1" onComplete={vi.fn()} />);
     expect(logLessonStartMock).toHaveBeenCalledWith('u1', seedLesson.id);
   });
+
+  it('shows completeError next to the 完成課堂 button when present, without hiding the button', async () => {
+    render(
+      <LessonScreen lesson={seedLesson} userId="u1" onComplete={vi.fn()} completeError="完成課堂紀錄唔到，請再試" />,
+    );
+
+    await userEvent.click(screen.getByText('下一步 ▶'));
+    await userEvent.click(screen.getByText('下一步 ▶'));
+    await userEvent.click(screen.getByText('當參考，有疑問問返醫生'));
+
+    expect(screen.getByText('完成課堂紀錄唔到，請再試')).toBeInTheDocument();
+    expect(screen.getByText('完成課堂 🎉')).toBeInTheDocument();
+  });
 });

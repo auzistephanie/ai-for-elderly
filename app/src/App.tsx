@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { NavBar } from './components/NavBar';
 import { HomeScreen } from './components/HomeScreen';
 import { LessonScreen } from './components/LessonScreen';
@@ -8,9 +8,12 @@ import { FamilyScreen } from './components/FamilyScreen';
 import { LoginScreen } from './components/LoginScreen';
 import { PairingScreen } from './components/PairingScreen';
 import { FamilyProgressView } from './components/FamilyProgressView';
+import { ErrorRetry } from './components/ErrorRetry';
 import { useAuth } from './hooks/useAuth';
 import { useLessons } from './hooks/useLessons';
 import { useProgress, computeBadges } from './hooks/useProgress';
+import { useAsyncAction } from './hooks/useAsyncAction';
+import { useAsyncData } from './hooks/useAsyncData';
 import { fetchFamilyLink } from './lib/family';
 import { LAYER_NAMES, getNextLesson, isLayerCompleted } from './lib/courseEngine';
 import type { ScreenName } from './types/screen';
@@ -19,10 +22,15 @@ function ElderShell({ userId }: { userId: string }) {
   const [screen, setScreen] = useState<ScreenName>('home');
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
   const { lessons, loaded: lessonsLoaded, error: lessonsError, reload: reloadLessons } = useLessons();
-  const { state, completeLesson, setFamilyShare } = useProgress(userId);
+  const {
+    state,
+    loaded: progressLoaded,
+    progressError,
+    reloadProgress,
+    completeLesson,
+    setFamilyShare,
+  } = useProgress(userId);
 
-  // Navigating via the bottom tabs always resets to that tab's top-level view — only an
-  // explicit tap on a lesson row/card drills into a specific lesson (openLesson below).
   function navigate(next: ScreenName) {
     setActiveLessonId(null);
     setScreen(next);
@@ -33,27 +41,13 @@ function ElderShell({ userId }: { userId: string }) {
     setScreen('lesson');
   }
 
-  // A fetch failure is distinct from "genuinely zero lessons" (see useLessons) and must not
-  // be swallowed into a silent blank/empty-state screen — surface it with the same
-  // error+retry affordance used elsewhere (e.g. FamilyProgressView). Retrying calls useLessons'
-  // own reload() rather than remounting ElderShell, so useProgress's streak/completion state
-  // (which had nothing to do with the failure) is left completely undisturbed.
   if (lessonsError) {
-    return (
-      <div className="app">
-        <div className="screen">
-          <div className="fam-card">
-            <p className="error-text">攞唔到課堂內容：{lessonsError}</p>
-            <button className="bigbtn" onClick={reloadLessons}>
-              再試一次
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    return <ErrorRetry message={`攞唔到課堂內容：${lessonsError}`} onRetry={reloadLessons} />;
   }
-
-  if (!lessonsLoaded) return <div className="app" />;
+  if (progressError) {
+    return <ErrorRetry message={progressError} onRetry={reloadProgress} />;
+  }
+  if (!lessonsLoaded || !progressLoaded) return <div className="app" />;
 
   const nextLesson = getNextLesson(lessons, state.completedLessonIds);
   const antiFraudLesson = lessons.find((l) => l.layer === 0) ?? null;
@@ -84,13 +78,11 @@ function ElderShell({ userId }: { userId: string }) {
         />
       )}
       {screen === 'lesson' && activeLesson && (
-        <LessonScreen
+        <ElderLessonScreen
           lesson={activeLesson}
           userId={userId}
-          onComplete={() => {
-            completeLesson(activeLesson.id);
-            navigate('progress');
-          }}
+          completeLesson={completeLesson}
+          onCompleted={() => navigate('progress')}
         />
       )}
       {screen === 'lesson' && !activeLesson && (
@@ -98,64 +90,67 @@ function ElderShell({ userId }: { userId: string }) {
       )}
       {screen === 'progress' && <ProgressScreen layers={layerTotals} badges={badges} />}
       {screen === 'family' && (
-        <FamilyScreen shareEnabled={state.familyShareEnabled} onToggleShare={setFamilyShare} userId={userId} />
+        <ElderFamilyScreen shareEnabled={state.familyShareEnabled} setFamilyShare={setFamilyShare} userId={userId} />
       )}
       <NavBar active={screen} onNavigate={navigate} />
     </div>
   );
 }
 
+// Wraps completeLesson (which throws on failure) in a local useAsyncAction so a failure shows
+// inline on LessonScreen and the app only moves to the progress tab on genuine success — closes
+// the "fire and forget, navigate regardless" gap the old onComplete={() => { completeLesson(...);
+// navigate(...); }} pattern had.
+function ElderLessonScreen({
+  lesson,
+  userId,
+  completeLesson,
+  onCompleted,
+}: {
+  lesson: Parameters<typeof LessonScreen>[0]['lesson'];
+  userId: string;
+  completeLesson: (lessonId: string) => Promise<void>;
+  onCompleted: () => void;
+}) {
+  const { run, error } = useAsyncAction(async () => {
+    await completeLesson(lesson.id);
+    onCompleted();
+  }, '完成課堂紀錄唔到，請再試');
+
+  return <LessonScreen lesson={lesson} userId={userId} completeError={error} onComplete={() => run()} />;
+}
+
+// Passes setFamilyShare straight through as onToggleShare. It throws on failure just like
+// completeLesson above, but unlike completeLesson it is NOT wrapped in a useAsyncAction here —
+// FamilyScreen.tsx wraps it in its own local useAsyncAction instead, so a failed toggle surfaces
+// inline there (next to the toggle itself), not at this call site.
+function ElderFamilyScreen({
+  shareEnabled,
+  setFamilyShare,
+  userId,
+}: {
+  shareEnabled: boolean;
+  setFamilyShare: (enabled: boolean) => Promise<void>;
+  userId: string;
+}) {
+  return <FamilyScreen shareEnabled={shareEnabled} onToggleShare={setFamilyShare} userId={userId} />;
+}
+
 function FamilyFlow({ userId }: { userId: string }) {
-  const [link, setLink] = useState<{ elderUserId: string; elderDisplayName: string | null } | null | undefined>(
-    undefined,
+  const [pairedLink, setPairedLink] = useState<{ elderUserId: string; elderDisplayName: string | null } | null>(
+    null,
   );
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [retryToken, setRetryToken] = useState(0);
+  const fetcher = useCallback(() => fetchFamilyLink(userId), [userId]);
+  const { data, error, loaded, busy, reload } = useAsyncData(fetcher, [userId], '攞唔到配對狀態，請再試');
 
-  useEffect(() => {
-    let active = true;
-    setBusy(true);
-    fetchFamilyLink(userId)
-      .then((result) => {
-        if (active) {
-          setLink(result);
-          setError(null);
-        }
-      })
-      .catch((err) => {
-        // Same dead-end-avoidance as FamilyProgressView: without a .catch() here, a rejected
-        // fetch leaves `link` at `undefined` forever and the user is stuck on a blank screen.
-        if (active) setError(err instanceof Error ? err.message : '攞唔到配對狀態，請再試');
-      })
-      .finally(() => {
-        if (active) setBusy(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [userId, retryToken]);
+  if (error) return <ErrorRetry message={error} onRetry={reload} busy={busy} />;
+  if (!loaded) return <div className="app" />;
 
-  if (error) {
-    return (
-      <div className="app">
-        <div className="screen">
-          <div className="fam-card">
-            <p className="error-text">{error}</p>
-            <button className="bigbtn" disabled={busy} onClick={() => setRetryToken((n) => n + 1)}>
-              {busy ? '再試緊…' : '再試一次'}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (link === undefined) return <div className="app" />;
+  const link = pairedLink ?? data ?? null;
   if (link === null) {
     return (
       <div className="app">
-        <PairingScreen onPaired={(elder) => setLink(elder)} />
+        <PairingScreen onPaired={setPairedLink} />
       </div>
     );
   }
@@ -185,23 +180,8 @@ export function App() {
     );
   }
 
-  // A signed-in session with role: null means elder_profiles has no row (or no role) for this
-  // user — e.g. ensureProfile() never ran, or its insert failed at the DB level. Falling through
-  // silently would guess "elder" and hand a family member (or nobody at all) the elder shell, so
-  // it gets its own explicit error+retry state instead.
   if (auth.role === null) {
-    return (
-      <div className="app">
-        <div className="screen">
-          <div className="fam-card">
-            <p className="error-text">攞唔到你嘅身份資料，請再試</p>
-            <button className="bigbtn" onClick={() => window.location.reload()}>
-              再試一次
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    return <ErrorRetry message="攞唔到你嘅身份資料，請再試" onRetry={() => window.location.reload()} />;
   }
 
   if (auth.role === 'family') return <FamilyFlow userId={auth.userId as string} />;
