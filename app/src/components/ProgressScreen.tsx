@@ -10,11 +10,12 @@ interface LayerInfo {
 interface ProgressScreenProps {
   layers: LayerInfo[];
   badges: Badge[];
+  onSelectLessons: () => void;
 }
 
 const LAYER_NUMERAL = ['一', '二', '三'];
 
-export function ProgressScreen({ layers, badges }: ProgressScreenProps) {
+export function ProgressScreen({ layers, badges, onSelectLessons }: ProgressScreenProps) {
   return (
     <div className="screen">
       <div className="topbar">
@@ -31,7 +32,7 @@ export function ProgressScreen({ layers, badges }: ProgressScreenProps) {
               ? `✅ 完成晒 ${layer.completedLessons} / ${layer.totalLessons} 課`
               : `學緊 ${layer.completedLessons} / ${layer.totalLessons} 課`;
         return (
-          <div className="prog-card" key={layer.layer}>
+          <button className="prog-card layer-btn" key={layer.layer} onClick={onSelectLessons}>
             <h4>第{LAYER_NUMERAL[layer.layer - 1] ?? layer.layer}層 · {layer.name}</h4>
             <div
               className="prog-bar"
@@ -44,7 +45,7 @@ export function ProgressScreen({ layers, badges }: ProgressScreenProps) {
               <div style={{ width: `${pct}%` }} />
             </div>
             <div className="prog-num">{label}</div>
-          </div>
+          </button>
         );
       })}
       <div className="prog-card">

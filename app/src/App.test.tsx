@@ -286,6 +286,19 @@ describe('App course engine (elder)', () => {
     expect(screen.getByText('點解要學呢樣嘢？')).toBeInTheDocument();
   });
 
+  it('tapping a layer card on the 進度 tab navigates to the 上堂 lesson list (not into a specific lesson)', async () => {
+    mockElder([layer1, layer2], ['l1']);
+    render(<App />);
+    await clickNavTab('進度');
+    expect(screen.getByText('✅ 完成晒 1 / 1 課')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByText('✅ 完成晒 1 / 1 課').closest('button')!);
+
+    // '揀一課，慢慢學' is LessonListScreen's own topbar subtitle — proves we landed on the
+    // list, not a specific opened lesson (which would show the lesson's own subtitle instead).
+    expect(screen.getByText('揀一課，慢慢學')).toBeInTheDocument();
+  });
+
   it('navigating to a different tab and back to 上堂 shows the list again, not the previously-open lesson', async () => {
     mockElder([layer1], []);
     render(<App />);
