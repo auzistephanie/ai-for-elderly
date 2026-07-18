@@ -49,8 +49,64 @@ def delete_lesson(lesson_id):
     resp.raise_for_status()
 
 
+def fetch_lesson_analytics():
+    lessons_resp = requests.get(
+        f"{SUPABASE_URL}/rest/v1/elder_lessons",
+        headers=HEADERS,
+        params={"select": "id,subtitle,layer,number", "order": "layer.asc,number.asc"},
+        timeout=15,
+    )
+    lessons_resp.raise_for_status()
+    lessons = lessons_resp.json()
+
+    starts_resp = requests.get(
+        f"{SUPABASE_URL}/rest/v1/elder_lesson_starts",
+        headers=HEADERS,
+        params={"select": "user_id,lesson_id"},
+        timeout=15,
+    )
+    starts_resp.raise_for_status()
+    starts = starts_resp.json()
+
+    completions_resp = requests.get(
+        f"{SUPABASE_URL}/rest/v1/elder_lesson_completions",
+        headers=HEADERS,
+        params={"select": "user_id,lesson_id"},
+        timeout=15,
+    )
+    completions_resp.raise_for_status()
+    completions = completions_resp.json()
+
+    started_by_lesson = {}
+    for row in starts:
+        started_by_lesson.setdefault(row["lesson_id"], set()).add(row["user_id"])
+
+    completed_by_lesson = {}
+    for row in completions:
+        completed_by_lesson.setdefault(row["lesson_id"], set()).add(row["user_id"])
+
+    result = []
+    for lesson in lessons:
+        lid = lesson["id"]
+        started = len(started_by_lesson.get(lid, set()))
+        completed = len(completed_by_lesson.get(lid, set()))
+        result.append(
+            {
+                "課堂": lesson["subtitle"],
+                "層": lesson["layer"],
+                "開咗（不重複人數）": started,
+                "完成咗": completed,
+                "未完成": max(0, started - completed),
+            }
+        )
+    return result
+
+
 st.set_page_config(page_title="AI老友記 - 課堂審批", layout="wide")
 st.title("AI老友記 · 待審批課堂")
+
+st.header("📊 課堂開始/完成統計")
+st.dataframe(fetch_lesson_analytics(), use_container_width=True)
 
 pending = fetch_pending_lessons()
 
