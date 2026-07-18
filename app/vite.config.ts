@@ -11,6 +11,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       manifest: {
+        lang: 'zh-HK',
         name: 'AI老友記',
         short_name: 'AI老友記',
         description: '老友記嘅 AI 生活學堂',
