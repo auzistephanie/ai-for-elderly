@@ -121,14 +121,11 @@ Stephanie 嘅電腦本機路徑：`~/Desktop/Stephanie-Google Drive/dev/`
    工程層面嘅 MVP roadmap 已經跑晒。之後未做嘅唔再係「計劃階段」，而係下面
    「未決事項」入面已經記緊嘅現實世界決定：deploy domain、定價／基金申請時機。
 2. **Deploy landing page**：揀 domain，換走 placeholder（footer email、CTA link、form 後端）。
-3. **確認首次 push**：雙擊 `push-now.command` 或等 daemon 跑一輪，check
-   https://github.com/auzistephanie/ai-for-elderly 有冇見到啲檔案。
 
 ## 未決事項（要 Stephanie 之後拍板）
 
 - ❓ Deploy domain（landing page + PWA）
 - ❓ 定價 / 基金申請路線幾時啟動
-- ❓ 首批 8–10 課種子課程嘅場景清單（想唔想自己揀）
 
 ---
 
