@@ -2,6 +2,10 @@
 
 > 改動記錄出口：新條目一律插喺呢個檔案頂部。CLAUDE.md 只放路由同現行規則。Plan1–5 開發史詳情 → `README.md` + `docs/superpowers/plans/*.md`（唔喺度重複）。
 
+## 2026-07-19 上線 — portfolio elder section 轉正
+
+Stephanie 確認 app ready，`stephanie-portfolio` elder section 由「◌ 籌備中」轉「● 運作中」，links-row 加咗 `$ open app →`（`https://ai-elder-app.vercel.app`）。詳細改動見 stephanie-portfolio CHANGELOG「elder section 轉正」條目；本檔＋CLAUDE.md「部署」段同步補生產網址。
+
 ## 2026-07-19 Lesson Demo — 真App參考（Google Gemini）+ Vercel 改名/重新 deploy
 
 - Stephanie review live app 後提出：12課demo step一直得抽象chat泡泡，冇教長者實際用邊個app、
