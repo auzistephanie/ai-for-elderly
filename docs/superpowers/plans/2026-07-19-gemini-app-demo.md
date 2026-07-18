@@ -314,7 +314,7 @@ Add these two constants right after the existing `const answeredCorrect = ...` l
 
 ```tsx
   const isFirstLesson = lesson.layer === 1 && lesson.number === 1;
-  const appStoreInfo = getGeminiAppStoreInfo(navigator.userAgent);
+  const appStoreInfo = getGeminiAppStoreInfo(navigator.userAgent, navigator.maxTouchPoints);
 ```
 
 Then, in the `step.kind === 'demo'` block (from Task 2), insert the card immediately before the `<div className="gemini-shell">`:

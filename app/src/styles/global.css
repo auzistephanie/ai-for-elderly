@@ -46,8 +46,31 @@ body {
 .lesson-body h3{font-size:30px; line-height:1.4; color:#1c1c1e; margin-bottom:14px;}
 .lesson-body .talk{font-size:24px; line-height:1.65; color:#333; margin-bottom:12px;}
 .demo-box{
-  margin:20px 0; background:#fff; border:2.5px dashed #b7cfc2; border-radius:20px;
-  padding:22px; font-size:22px; color:#333; line-height:1.6;
+  background:#fff; padding:22px; font-size:22px; color:#333; line-height:1.6;
+}
+.gemini-shell{ margin:20px 0; border-radius:20px; overflow:hidden; box-shadow:0 4px 14px rgba(0,0,0,.1); }
+.gemini-header{
+  background:linear-gradient(90deg,#4285f4,#9b72cb); padding:12px 18px; color:#fff;
+  display:flex; align-items:center; gap:8px; font-weight:700; font-size:20px;
+}
+.gemini-input-bar{
+  background:#fff; border-top:1px solid #eee; padding:12px 18px;
+  display:flex; align-items:center; gap:14px; opacity:.55; pointer-events:none;
+}
+.gemini-input-bar .icon{ font-size:24px; }
+.gemini-input-bar .field{ flex:1; background:#f2f2f2; border-radius:20px; height:40px; }
+.gemini-card{
+  margin:20px 0; border-radius:18px; padding:24px; text-align:center; color:#fff;
+  background:linear-gradient(135deg,#4285f4,#9b72cb,#d96570);
+  box-shadow:0 4px 14px rgba(0,0,0,.12);
+}
+.gemini-card .ico{ font-size:40px; margin-bottom:8px; }
+.gemini-card h4{ font-size:22px; margin-bottom:6px; color:#fff; }
+.gemini-card p{ font-size:18px; opacity:.95; margin-bottom:16px; line-height:1.6; }
+.gemini-card .get-app-btn{
+  display:flex; align-items:center; justify-content:center; min-height:60px;
+  background:#fff; color:#2b2b26; border-radius:12px; padding:14px;
+  font-weight:700; font-size:20px; text-decoration:none;
 }
 .bubble-user{background:#dcf3e6; border-radius:16px; padding:14px 16px; margin-bottom:12px; font-size:22px; white-space:pre-line;}
 .bubble-ai{background:#f0f0f0; border-radius:16px; padding:14px 16px; font-size:22px; white-space:pre-line;}

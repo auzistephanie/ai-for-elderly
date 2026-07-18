@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Lesson } from '../types/lesson';
 import { SpeakButton } from './SpeakButton';
 import { logLessonStart } from '../lib/lessonStarts';
+import { getGeminiAppStoreInfo } from '../lib/appStoreLinks';
 
 interface LessonScreenProps {
   lesson: Lesson;
@@ -25,6 +26,9 @@ export function LessonScreen({ lesson, userId, onComplete, completeError }: Less
   const quizStep = step.kind === 'quiz' ? step : null;
   const answeredCorrect =
     quizStep !== null && selectedOption !== null && quizStep.options[selectedOption].correct;
+
+  const isFirstLesson = lesson.layer === 1 && lesson.number === 1;
+  const appStoreInfo = getGeminiAppStoreInfo(navigator.userAgent, navigator.maxTouchPoints);
 
   return (
     <div className="screen">
@@ -52,12 +56,33 @@ export function LessonScreen({ lesson, userId, onComplete, completeError }: Less
 
         {step.kind === 'demo' && (
           <>
-            <div className="demo-box">
-              {step.bubbles.map((b, i) => (
-                <div key={i} className={b.speaker === 'user' ? 'bubble-user' : 'bubble-ai'}>
-                  {b.text}
-                </div>
-              ))}
+            {isFirstLesson && (
+              <div className="gemini-card">
+                <div className="ico">✨</div>
+                <h4>今堂要用返 Gemini App</h4>
+                <p>好多手機已經有裝，冇裝嘅撳低面掣攞返一個，完全免費。</p>
+                <a className="get-app-btn" href={appStoreInfo.url}>
+                  {appStoreInfo.label}
+                </a>
+              </div>
+            )}
+            <div className="gemini-shell">
+              <div className="gemini-header">
+                <span>✨</span>
+                <span>Gemini</span>
+              </div>
+              <div className="demo-box">
+                {step.bubbles.map((b, i) => (
+                  <div key={i} className={b.speaker === 'user' ? 'bubble-user' : 'bubble-ai'}>
+                    {b.text}
+                  </div>
+                ))}
+              </div>
+              <div className="gemini-input-bar" aria-hidden="true">
+                <span className="icon">📷</span>
+                <div className="field" />
+                <span className="icon">🎤</span>
+              </div>
             </div>
             {step.body.map((p, i) => (
               <p className="talk" key={i}>{p}</p>

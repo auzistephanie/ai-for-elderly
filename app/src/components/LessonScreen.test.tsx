@@ -73,4 +73,49 @@ describe('LessonScreen', () => {
     expect(screen.getByText('完成課堂紀錄唔到，請再試')).toBeInTheDocument();
     expect(screen.getByText('完成課堂 🎉')).toBeInTheDocument();
   });
+
+  it("wraps the demo step's bubbles in a Gemini-branded shell", async () => {
+    render(<LessonScreen lesson={seedLesson} userId="u1" onComplete={vi.fn()} />);
+
+    await userEvent.click(screen.getByText('下一步 ▶'));
+
+    expect(screen.getByText('Gemini')).toBeInTheDocument();
+    // The existing bubble content must still render, unchanged, inside the new shell.
+    expect(screen.getByText(/呢隻係血壓藥/)).toBeInTheDocument();
+  });
+
+  it('shows a "get Gemini" card only on the very first lesson (layer 1, number 1)', async () => {
+    render(<LessonScreen lesson={seedLesson} userId="u1" onComplete={vi.fn()} />);
+
+    await userEvent.click(screen.getByText('下一步 ▶'));
+
+    expect(screen.getByText('今堂要用返 Gemini App')).toBeInTheDocument();
+  });
+
+  it('does not show the "get Gemini" card on a later lesson', async () => {
+    const laterLesson = { ...seedLesson, layer: 2 as const, number: 5 };
+    render(<LessonScreen lesson={laterLesson} userId="u1" onComplete={vi.fn()} />);
+
+    await userEvent.click(screen.getByText('下一步 ▶'));
+
+    expect(screen.queryByText('今堂要用返 Gemini App')).not.toBeInTheDocument();
+  });
+
+  it('does not show the "get Gemini" card on the second lesson of the same layer', async () => {
+    const secondLessonSameLayer = { ...seedLesson, number: 2 };
+    render(<LessonScreen lesson={secondLessonSameLayer} userId="u1" onComplete={vi.fn()} />);
+
+    await userEvent.click(screen.getByText('下一步 ▶'));
+
+    expect(screen.queryByText('今堂要用返 Gemini App')).not.toBeInTheDocument();
+  });
+
+  it('the "get Gemini" card links to a real Gemini app-store URL', async () => {
+    render(<LessonScreen lesson={seedLesson} userId="u1" onComplete={vi.fn()} />);
+
+    await userEvent.click(screen.getByText('下一步 ▶'));
+
+    const link = screen.getByRole('link', { name: /攞 Gemini/ });
+    expect(link.getAttribute('href')).toMatch(/^https:\/\/(play\.google\.com|apps\.apple\.com)\//);
+  });
 });
