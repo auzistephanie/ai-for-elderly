@@ -135,7 +135,19 @@ Stephanie 嘅電腦本機路徑：`~/Desktop/Stephanie-Google Drive/dev/`
    `tsc -b`、lint、build 全綠。詳細計劃見
    `docs/superpowers/plans/2026-07-18-error-retry-consolidation.md` +
    design doc `docs/superpowers/specs/2026-07-18-error-retry-consolidation-design.md`。
-2. **Deploy landing page**：揀 domain，換走 placeholder（footer email、CTA link、form 後端）。
+   ✅ **Lesson Demo — 真 App 參考（Google Gemini）**（另一個獨立 follow-up，2026-07-19 完成）——
+   Stephanie 提出：12 課全部嘅 demo step 一直淨係抽象 chat 泡泡，冇教長者實際撳邊個app、個app
+   長咩樣。揀咗 **Google Gemini**（唔使VPN，Android機好多時已預裝）做參考 app，
+   風格化重現（code畫，唔係真screenshot，避免Gemini改版就要重影）：全部demo step而家包咗
+   Gemini品牌外殼（藍紫gradient頂bar、輸入框icon），加埋只喺第一課先顯示嘅「去裝Gemini」卡
+   （已核實真Play Store/App Store連結，仲會分Android/iOS，包埋現代iPad嘅UA偵測漏洞）；
+   landing page「送給父母」步驟都加咗提提子女幫手裝app。182個測試、`tsc -b`、lint、build全綠，
+   live walkthrough（真dev server）驗證咗第一課同其他課嘅分別。詳細計劃見
+   `docs/superpowers/plans/2026-07-19-gemini-app-demo.md` + design doc
+   `docs/superpowers/specs/2026-07-19-gemini-app-demo-design.md`。
+2. ~~Deploy landing page：揀 domain，換走 placeholder（footer email、CTA link、form 後端）~~
+   ✅ 已完成 2026-07-19（見下面「部署現況」）——placeholder 全換走，CTA/表格/email 都係真嘅，
+   仲未做嘅淨係自訂 domain（而家用緊 Vercel 派嘅 `*.vercel.app`）。
 
 ## 部署現況
 
@@ -148,9 +160,9 @@ Stephanie 嘅電腦本機路徑：`~/Desktop/Stephanie-Google Drive/dev/`
 
 ## 未決事項（要 Stephanie 之後拍板）
 
-- ❓ 自訂 domain（而家 PWA 淨係得 Vercel 派嘅預設 `*.vercel.app` 網址，landing page 完全未部署）
+- ❓ 自訂 domain（而家 PWA 同 landing page 都淨係得 Vercel 派嘅預設 `*.vercel.app` 網址）
 - ❓ 定價 / 基金申請路線幾時啟動
 
 ---
 
-*最後更新：2026-07-19（Error/Retry-Shape Consolidation follow-up 完成，PWA 重新 deploy 上 Vercel）*
+*最後更新：2026-07-19（Lesson Demo — Google Gemini 真App參考 follow-up 完成，PWA + landing page 都重新 deploy 咗）*
