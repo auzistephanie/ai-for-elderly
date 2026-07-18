@@ -96,6 +96,30 @@ Stephanie 嘅電腦本機路徑：`~/Desktop/Stephanie-Google Drive/dev/`
    已經正確顯示返家人真名，而且冇影響返轉頭（家人畫面見長者真名嗰個方向本身冇壞過）。
    單元測試（133 個）、build、lint 三項都保持全綠。詳細計劃見
    `docs/superpowers/plans/2026-07-18-plan4-family-companion.md`。
+   ✅ Plan 5（PWA polish，MVP 五個計劃入面最後一個）已完成 —
+   用 `vite-plugin-pwa` 裝咗完整 PWA manifest + service worker，換埋自家品牌 icon set
+   （192/512px + maskable，配色跟返 #2f6f4f 深綠／#faf8f4 米白主色）；已出街課堂內容
+   （`elder_lessons` REST call）用 Workbox StaleWhileRevalidate 離線快取，離線都睇到上次
+   攞過嘅課堂；Streamlit admin 工具加咗簡單「開始 vs 完成」分析（`elder_lesson_starts` 表
+   淨寫入，配合原有 completions 做返個對照）；順手執埋 `index.html` 遺留低嘅 Vite scaffold
+   default title/lang。真 Lighthouse PWA audit（Lighthouse 11.7.1，`--only-categories=pwa`，
+   對住 `vite preview` 起嘅 production build 跑，非模擬）第一輪 0.88 分，
+   淨得 `themed-omnibox`（冇 `<meta name="theme-color">`）唔過；加返呢個 meta tag 之後
+   重新 build + 重新跑，全部 installability audit（`installable-manifest`／`splash-screen`／
+   `themed-omnibox`／`content-width`／`viewport`／`maskable-icon`）滿分過，PWA 分數 **1.0（100%）**
+   （另外 3 個 manual-only audit `pwa-cross-browser`／`pwa-page-transitions`／
+   `pwa-each-page-has-url` 本身就冇自動化分數，唔算失敗）。用 Playwright headless
+   真係驗證咗 service worker 註冊、precache 生效、離線 reload 之後 App shell
+   （登入畫面）仍然完整 render 出嚟，唔係一片空白／network error；因為攞課堂內容嗰步
+   需要真 Supabase 電話 OTP 登入，headless 環境冇辦法一次過走完，所以呢次淨止實測到
+   「App shell 離線可用」，未實測到「已登入長者離線都攞到課堂內容」呢一層。
+   單元測試（137 個，22 個檔案）、build、lint 三項都保持全綠。詳細計劃見
+   `docs/superpowers/plans/2026-07-18-plan5-pwa-polish.md`。
+
+   **MVP 五個計劃（Plan 1–5）全部完成** —
+   由 walking skeleton 到 Supabase 後端、內容管道、家人同行、PWA polish，
+   工程層面嘅 MVP roadmap 已經跑晒。之後未做嘅唔再係「計劃階段」，而係下面
+   「未決事項」入面已經記緊嘅現實世界決定：deploy domain、定價／基金申請時機。
 2. **Deploy landing page**：揀 domain，換走 placeholder（footer email、CTA link、form 後端）。
 3. **確認首次 push**：雙擊 `push-now.command` 或等 daemon 跑一輪，check
    https://github.com/auzistephanie/ai-for-elderly 有冇見到啲檔案。
@@ -108,4 +132,4 @@ Stephanie 嘅電腦本機路徑：`~/Desktop/Stephanie-Google Drive/dev/`
 
 ---
 
-*最後更新：2026-07-18（Plan 4 家人同行功能 polish 完成，end-to-end 驗證通過）*
+*最後更新：2026-07-18（Plan 5 PWA polish 完成，Lighthouse PWA 100 分，MVP 五個計劃全部完成）*
