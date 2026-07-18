@@ -120,13 +120,35 @@ Stephanie 嘅電腦本機路徑：`~/Desktop/Stephanie-Google Drive/dev/`
    由 walking skeleton 到 Supabase 後端、內容管道、家人同行、PWA polish，
    工程層面嘅 MVP roadmap 已經跑晒。之後未做嘅唔再係「計劃階段」，而係下面
    「未決事項」入面已經記緊嘅現實世界決定：deploy domain、定價／基金申請時機。
+   ✅ **Error/Retry-Shape Consolidation**（獨立於五個計劃之外嘅 follow-up，2026-07-19 完成）——
+   統一晒全 app 錯誤處理寫法：`lib/*.ts` 全部改做拋帶廣東話訊息嘅 `Error`；新增
+   `useAsyncData`／`useAsyncAction` 兩個共用 hook 取代成 8 個檔案各自手寫嘅
+   busy/error/try-catch；新增 `<ErrorRetry>` 共用 component。順手修好兩個真 bug：
+   `progressApi.ts` 之前拋緊 raw Supabase error object（令所有 `err instanceof Error`
+   判斷永遠行 fallback，真訊息全部俾吞咗）；完成課堂／切換家人分享失敗之前完全靜默、
+   用戶撳咗好似冇反應。Live walkthrough（真 dev server + 真 Supabase）仲揪到一個單元
+   測試冚唔到嘅 bug：網絡真係斷咗嗰陣，Supabase client 唔會令 promise reject，而係
+   正常 resolve 一個 `error.message` 係原始英文 exception 文字嘅 object，會漏咗
+   「TypeError: Failed to fetch」呢類英文畀長者睇——已修好一半（`toFriendlyMessage`
+   唔再信 native exception），剩返幾個 lib 檔案仲會信 Supabase 自己個
+   `error.message`（記喺 project memory，需要另開 scope 先跟）。170 個測試、
+   `tsc -b`、lint、build 全綠。詳細計劃見
+   `docs/superpowers/plans/2026-07-18-error-retry-consolidation.md` +
+   design doc `docs/superpowers/specs/2026-07-18-error-retry-consolidation-design.md`。
 2. **Deploy landing page**：揀 domain，換走 placeholder（footer email、CTA link、form 後端）。
+
+## 部署現況
+
+- **PWA (`app/`)**：已經有 Vercel deployment，production URL：
+  https://app-delta-two-31.vercel.app（Vercel 自動派嘅預設域名，唔係自訂 domain）。
+  Project 名叫「app」，掛喺 Vercel account `auzistephanies-projects` 度。
+- **Landing page (`ai-elder-landing.html`)**：未部署。
 
 ## 未決事項（要 Stephanie 之後拍板）
 
-- ❓ Deploy domain（landing page + PWA）
+- ❓ 自訂 domain（而家 PWA 淨係得 Vercel 派嘅預設 `*.vercel.app` 網址，landing page 完全未部署）
 - ❓ 定價 / 基金申請路線幾時啟動
 
 ---
 
-*最後更新：2026-07-18（Plan 5 PWA polish 完成，Lighthouse PWA 100 分，MVP 五個計劃全部完成）*
+*最後更新：2026-07-19（Error/Retry-Shape Consolidation follow-up 完成，PWA 重新 deploy 上 Vercel）*
