@@ -37,7 +37,7 @@
 |---|---|---|
 | `AI-elder-app-SPEC.md` | 完整 product spec | 交俾 Claude Code CLI（配 superpowers）自行起 MVP |
 | `ai-elder-app-mockup.html` | App 互動 mockup | 已獲批嘅視覺／互動參考，4 個 tab 都撳得 |
-| `ai-elder-landing.html` | 宣傳 landing page | 滾動旅程式，validator PASS，可直接 deploy |
+| `landing/index.html` | 宣傳 landing page | 滾動旅程式；CTA 直連 app（冇再用假登記表），2026-07-19 部署（原本喺 repo 根 `ai-elder-landing.html`，搬咗嚟呢度做 Vercel deploy 單位，冇再有兩份重複） |
 | `README.md` | 本檔 | Project 總覽 / 接手指引 |
 
 ---
@@ -144,7 +144,7 @@ Stephanie 嘅電腦本機路徑：`~/Desktop/Stephanie-Google Drive/dev/`
   - **正式公開網址：https://ai-elder-app.vercel.app**（2026-07-19 開，SSO protection
     已為呢個 project 關咗，因為呢個係俾長者用嘅公開 app，唔應該要 Vercel team 登入先睇到）。
   - 舊 URL `app-delta-two-31.vercel.app` 都仲得，但對外一律用返上面嗰條新嘅。
-- **Landing page (`ai-elder-landing.html`)**：未部署。
+- **Landing page (`landing/index.html`)**：**https://ai-elder-landing.vercel.app**（2026-07-19 部署，獨立 Vercel project「ai-elder-landing」，SSO protection 已關）。CTA（「免費開始學」）直接連去 PWA `https://ai-elder-app.vercel.app`；舊版嗰個假登記表（純前端、`event.preventDefault()`、冇真 backend）已經拆咗。
 
 ## 未決事項（要 Stephanie 之後拍板）
 
