@@ -129,10 +129,16 @@ describe('App auth gate', () => {
     await waitFor(() => expect(screen.getByText('輸入配對碼')).toBeInTheDocument());
   });
 
-  it('shows an error+retry message when useLessons fails, and retry calls reload() (not a full remount)', async () => {
+  it('shows the useLessons error message verbatim (no extra prefix), and retry calls reload() (not a full remount)', async () => {
+    // 2026-07-19：之前呢度用 '網絡有問題' 做 mock error，但斷言淨係查
+    // /攞唔到課堂內容/ 呢個 App.tsx 自己加嘅寫死前綴有冇出現——冇真正驗證過
+    // useLessons() 個 error 本身有冇畀顯示出嚟。而家 App.tsx 已經唔再加前綴
+    // （見 useLessons.ts 個 error 本身已經係完整訊息，加多次會出「攞唔到課堂
+    // 內容：攞唔到課堂內容」），改用真實 useLessons.ts 會拋嘅字串做 mock，
+    // 直接斷言個訊息原字顯示、唔會被包多層、亦唔會出現兩次。
     useAuthMock.mockReturnValue({ status: 'signed-in', userId: 'u1', role: 'elder' });
     const reloadMock = vi.fn();
-    useLessonsMock.mockReturnValue({ lessons: [], loaded: true, error: '網絡有問題', reload: reloadMock });
+    useLessonsMock.mockReturnValue({ lessons: [], loaded: true, error: '攞唔到課堂內容', reload: reloadMock });
     useProgressMock.mockReturnValue({
       state: { completedLessonIds: [], streakCount: 0, lastActiveDate: null, familyShareEnabled: true },
       loaded: true,
@@ -143,7 +149,10 @@ describe('App auth gate', () => {
     });
 
     render(<App />);
-    expect(screen.getByText(/攞唔到課堂內容/)).toBeInTheDocument();
+    const matches = screen.getAllByText(/攞唔到課堂內容/);
+    expect(matches).toHaveLength(1);
+    expect(matches[0]).toHaveTextContent('攞唔到課堂內容');
+    expect(matches[0]).not.toHaveTextContent('攞唔到課堂內容：攞唔到課堂內容');
     await userEvent.click(screen.getByText('再試一次'));
     expect(reloadMock).toHaveBeenCalledTimes(1);
   });

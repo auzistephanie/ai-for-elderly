@@ -17,11 +17,16 @@ HEADERS = {
 }
 
 
-def fetch_pending_lessons():
+def fetch_published_lessons():
+    # 2026-07-19 修：以前呢度揾 status=eq.pending——但 `scripts/generate_lessons.py`
+    # 2026-07-19 改咗做直接寫 status='published'（Stephanie 決定跳過逐課審批），
+    # 由嗰日起就再冇任何 row 會係 pending，呢個工具永遠揾唔到嘢，等於冇咗個
+    # 事後補救網（該檔 docstring 明文話「admin/Streamlit app 仍然存在，畀
+    # retroactively 睇/改/落架已發佈課堂」——而家先真係做到呢個角色）。
     resp = requests.get(
         f"{SUPABASE_URL}/rest/v1/elder_lessons",
         headers=HEADERS,
-        params={"status": "eq.pending", "order": "layer.asc,number.asc", "select": "*"},
+        params={"status": "eq.published", "order": "layer.asc,number.asc", "select": "*"},
         timeout=15,
     )
     resp.raise_for_status()
@@ -102,18 +107,19 @@ def fetch_lesson_analytics():
     return result
 
 
-st.set_page_config(page_title="AI老友記 - 課堂審批", layout="wide")
-st.title("AI老友記 · 待審批課堂")
+st.set_page_config(page_title="AI老友記 - 課堂管理", layout="wide")
+st.title("AI老友記 · 已發佈課堂（睇/改/落架）")
+st.caption("課堂而家由 generate_lessons.py 直接發佈，冇逐課審批呢一步——呢個工具改做事後補救：睇返已發佈嘅內容，發現問題可以隨時改或者落架。")
 
 st.header("📊 課堂開始/完成統計")
 st.dataframe(fetch_lesson_analytics(), use_container_width=True)
 
-pending = fetch_pending_lessons()
+published = fetch_published_lessons()
 
-if not pending:
-    st.info("而家冇 pending 課堂。")
+if not published:
+    st.info("而家冇已發佈課堂。")
 
-for lesson in pending:
+for lesson in published:
     with st.expander(f"[第{lesson['layer']}層 #{lesson['number']}] {lesson['subtitle']}"):
         title = st.text_input("標題", value=lesson["title"], key=f"title-{lesson['id']}")
         subtitle = st.text_input("副標題", value=lesson["subtitle"], key=f"subtitle-{lesson['id']}")
@@ -145,7 +151,7 @@ for lesson in pending:
         feedback_wrong = st.text_input("答錯嘅回應", value=quiz_step["feedbackWrong"], key=f"fb-wrong-{lesson['id']}")
 
         col1, col2 = st.columns(2)
-        if col1.button("✅ Approve", key=f"approve-{lesson['id']}"):
+        if col1.button("💾 儲存修改", key=f"save-{lesson['id']}"):
             required_fields = {
                 "標題": title,
                 "副標題": subtitle,
@@ -159,7 +165,7 @@ for lesson in pending:
             }
             blank_fields = [name for name, value in required_fields.items() if not value.strip()]
             if blank_fields:
-                st.error(f"呢啲欄唔可以留空，未 approve：{'、'.join(blank_fields)}")
+                st.error(f"呢啲欄唔可以留空，未儲存：{'、'.join(blank_fields)}")
             else:
                 new_steps = [
                     {**why_step, "body": why_body.split("\n"), "speak": why_speak},
@@ -179,10 +185,10 @@ for lesson in pending:
                     lesson["id"],
                     {"title": title, "subtitle": subtitle, "steps": new_steps, "status": "published"},
                 )
-                st.success(f"已 approve：{subtitle}")
+                st.success(f"已儲存：{subtitle}")
                 st.rerun()
 
-        if col2.button("❌ Reject（刪除）", key=f"reject-{lesson['id']}"):
+        if col2.button("🗑 落架（刪除）", key=f"unpublish-{lesson['id']}"):
             delete_lesson(lesson["id"])
-            st.warning(f"已刪除：{subtitle}")
+            st.warning(f"已落架：{subtitle}")
             st.rerun()

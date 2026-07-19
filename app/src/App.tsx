@@ -42,7 +42,11 @@ function ElderShell({ userId }: { userId: string }) {
   }
 
   if (lessonsError) {
-    return <ErrorRetry message={`攞唔到課堂內容：${lessonsError}`} onRetry={reloadLessons} />;
+    // 2026-07-19 修：useLessons.ts 拋嘅 error 本身已經係完整、包裝好嘅 Cantonese
+    // 訊息（見 useAsyncData 嘅 toFriendlyMessage），呢度之前再加多次「攞唔到
+    // 課堂內容：」做前綴，會令用家見到「攞唔到課堂內容：攞唔到課堂內容」重複
+    // 顯示。跟返 progressError 嗰行嘅寫法——直接顯示 error 本身，唔再加前綴。
+    return <ErrorRetry message={lessonsError} onRetry={reloadLessons} />;
   }
   if (progressError) {
     return <ErrorRetry message={progressError} onRetry={reloadProgress} />;

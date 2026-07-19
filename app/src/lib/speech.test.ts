@@ -42,4 +42,18 @@ describe('speakCantonese', () => {
     const utterance = speakSpy.mock.calls[0][0] as SpeechSynthesisUtterance;
     expect(utterance.voice).toBeNull();
   });
+
+  it('2026-07-19: does NOT force a Mandarin (zh-CN) voice when no Cantonese voice exists — many desktop browsers only ship zh-CN, and reading Mandarin to a Cantonese-speaking elder is wrong even though "zh" technically matches', () => {
+    const mandarin = makeVoice('zh-CN', 'Tingting');
+    vi.spyOn(window.speechSynthesis, 'getVoices').mockReturnValue([makeVoice('en-US', 'Samantha'), mandarin]);
+    const speakSpy = vi.spyOn(window.speechSynthesis, 'speak');
+
+    speakCantonese('你好嗎');
+
+    const utterance = speakSpy.mock.calls[0][0] as SpeechSynthesisUtterance;
+    expect(utterance.voice).not.toBe(mandarin);
+    expect(utterance.voice).toBeNull();
+    // lang stays zh-HK so the browser's own fallback logic still has a hint to work with
+    expect(utterance.lang).toBe('zh-HK');
+  });
 });

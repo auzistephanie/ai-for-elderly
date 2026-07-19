@@ -2,6 +2,15 @@
 
 > 改動記錄出口：新條目一律插喺呢個檔案頂部。CLAUDE.md 只放路由同現行規則。Plan1–5 開發史詳情 → `README.md` + `docs/superpowers/plans/*.md`（唔喺度重複）。
 
+## 2026-07-19 Code review 🟡🟢 三單一齊補（admin/app.py 名不副實、speech.ts Mandarin 誤選、App.tsx 錯誤訊息重複字）
+
+- **背景**：跟第一輪 🔴 review 之後，用家要求「做埋🟡同🟢之後再重新check一次」。
+- **Fix 1（🟡 `admin/app.py` 頁面同 code 都仲用緊已經廢咗嘅「pending審批」語言）**：今日先拍板取消 approve gate（見上面果條 changelog entry），但 `admin/app.py` 個 `fetch_pending_lessons()` 函數名、filter（`status: eq.pending`）、頁面標題/按鈕（「✅ Approve」「❌ Reject（刪除）」）全部都仲喺講緊審批流程，同已改做「事後補救」嘅實際角色唔夾。改做 `fetch_published_lessons()`／filter `status: eq.published`／按鈕改「💾 儲存修改」「🗑 落架（刪除）」，配返 `generate_lessons.py` docstring 講嘅「retroactive view/edit/unpublish」定位。
+- **Fix 2（🟡 `speech.ts` 揀 TTS 聲會誤中 Mandarin）**：`findCantoneseVoice()` 最尾行 fallback `voices.find(v => v.lang.startsWith('zh'))` 會喺得返 zh-CN Mandarin voice、冇 yue-HK/zh-HK 嘅情況下錯揀，令廣東話 app 讀出普通話。拎走呢個 fallback，冇match就跌落瀏覽器default，唔再夾硬揀錯語言。新增test case：Mandarin-only voice list 唔會俾夾硬選中，`utterance.lang` 留返 `'zh-HK'`。
+- **Fix 3（🟢 `App.tsx` lessonsError 訊息重複前綴）**：`ElderShell` 嘅 `lessonsError` 分支之前再加多次「攞唔到課堂內容：」做前綴，但 `useLessons.ts` 拋出嚟嘅 error 本身已經係完整訊息，用家會見到「攞唔到課堂內容：攞唔到課堂內容」重複顯示。跟返 `progressError` 分支寫法，直接顯示 error 本身。同步改咗 `App.test.tsx` 個原本斷言緊舊前綴文字、mock 咗一個唔相關字串嘅測試，換做真實 error 字串 + 斷言啱好出現一次、冇重複。
+- **驗證**：Python 兩個檔（`admin/app.py`、`generate_lessons.py`）過 `py_compile`。TypeScript 三個檔喺真 Mac 用 `npx vitest run` 跑咗：`speech.test.ts`（4 過）＋`App.test.tsx`（16 過）＝針對性 20/20 過；順手跑埋成個 app 嘅全套 vitest（28 test files，194 tests）冇任何regression。
+- **檔案**：`admin/app.py`、`app/src/lib/speech.ts`、`app/src/lib/speech.test.ts`、`app/src/App.tsx`、`app/src/App.test.tsx`、`scripts/generate_lessons.py`（log 字眼配合今日政策改變同步修）。
+
 ## 2026-07-19 政策改變：內容出街唔再需要人手 approve + 進度頁面加撳掣
 
 - **Stephanie 拍板取消「AI 生成 draft → 人手 approve → 出街」呢條由 Plan3 開始鎖定嘅硬規矩**：佢話信得過 DeepSeek 嘅生成質素，唔想再逐課撳approve。`scripts/generate_lessons.py` 由寫入 `status='pending'` 改做直接 `status='published'`，`admin/app.py`（Streamlit）保留但改做事後補救（睇/edit/unpublish），唔再係出街前必經gate。同步更新咗 `README.md`／`CLAUDE.md`／`AI-elder-app-SPEC.md` §6 三份文件嘅locked decision，`scripts/test_generate_lessons.py` 對應assertion都改咗，9個pytest全過。

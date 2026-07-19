@@ -184,7 +184,10 @@ def main() -> int:
             raw = call_deepseek(scenario, deepseek_key)
             lesson = parse_lesson_response(raw, scenario)
             insert_lesson(lesson, supabase_url, service_role_key)
-            print(f"  已寫入 pending：{lesson['subtitle']}")
+            # 2026-07-19 修：呢個 script 頂部 docstring 講明而家寫 status='published'
+            # 即時發佈（唔再經 pending 審批），但落面呢兩句 log 之前仲寫住「pending」，
+            # 睇 console/CI log 會誤導人以為課堂仲喺審批隊列等緊人手 approve。
+            print(f"  已寫入（published）：{lesson['subtitle']}")
         except Exception as exc:  # one bad scenario must not stop the whole batch
             print(f"  失敗：{exc}")
             failures.append(scenario["id"])
@@ -193,7 +196,7 @@ def main() -> int:
         print(f"\n{len(failures)} 課生成失敗：{failures}")
         return 1
 
-    print(f"\n全部 {len(SCENARIOS)} 課都成功寫入 pending 隊列。")
+    print(f"\n全部 {len(SCENARIOS)} 課都成功寫入（即時發佈，冇 pending 審批）。")
     return 0
 
 
