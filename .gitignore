@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 .DS_Store
 .superpowers
+
+# 清理回收筒（Stephanie 全局規則：清理一律 mv 去 _to_delete/，唔好推上 GitHub）
+_to_delete/
