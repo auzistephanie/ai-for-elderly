@@ -74,7 +74,8 @@ def call_deepseek(scenario: Dict[str, Any], api_key: str) -> str:
         DEEPSEEK_URL,
         headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
         json={
-            "model": "deepseek-chat",
+            "model": "deepseek-v4-flash",
+            "thinking": {"type": "disabled"},
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": build_prompt(scenario)},

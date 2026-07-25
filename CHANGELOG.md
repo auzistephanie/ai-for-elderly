@@ -2,6 +2,13 @@
 
 > 改動記錄出口：新條目一律插喺呢個檔案頂部。CLAUDE.md 只放路由同現行規則。Plan1–5 開發史詳情 → `README.md` + `docs/superpowers/plans/*.md`（唔喺度重複）。
 
+## 2026-07-25 DeepSeek 官方停用 deepseek-chat → scripts/generate_lessons.py 換 deepseek-v4-flash
+
+- **背景**：DeepSeek 官方 2026-07-24 停用舊 model 名 `deepseek-chat`/`deepseek-reasoner`，迎代 `deepseek-v4-flash`/`deepseek-v4-pro`；跨 5 個 repo 掃描發現本 repo `scripts/generate_lessons.py`（課堂內容生成管道）仲用緊已死嘅 `deepseek-chat`。
+- **修**：`call_deepseek()` 個 request body 換做 `"model": "deepseek-v4-flash"` + `"thinking": {"type": "disabled"}`（新 model 預設開 thinking mode，會加時間/成本，加呢個 key 保持原本非thinking快速生成行為）。
+- **驗證**：`py_compile` 過；真 Mac + 真 API key 實測同一個 request 格式（curl 式呼叫）：status=200、回覆正常、`reasoning_content` 為空確認 thinking 已關。⚠️ 未做：`pytest scripts/test_generate_lessons.py`（Cowork sandbox 冇 pytest 亦冇網絡裝，未跑）——純 model 名替換無邏輯改動，風險低，但建議下次本機 session 補跑一次單元測試。
+- **檔案**：`scripts/generate_lessons.py`。
+
 ## 2026-07-19 Code review 🟡🟢 三單一齊補（admin/app.py 名不副實、speech.ts Mandarin 誤選、App.tsx 錯誤訊息重複字）
 
 - **背景**：跟第一輪 🔴 review 之後，用家要求「做埋🟡同🟢之後再重新check一次」。
