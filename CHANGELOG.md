@@ -2,6 +2,13 @@
 
 > 改動記錄出口：新條目一律插喺呢個檔案頂部。CLAUDE.md 只放路由同現行規則。Plan1–5 開發史詳情 → `README.md` + `docs/superpowers/plans/*.md`（唔喺度重複）。
 
+## 2026-07-25 CLAUDE.md 瘦身（跟 Anthropic《new rules of context engineering for Claude 5》）
+
+- **原則**：CLAUDE.md 要輕，token 主力花喺 **gotchas**（模型預設判斷會做相反嘅嘢），能推斷／已寫喺 spec 嘅嘢一律唔好抄多次。
+- **本次**：5375 → 3889 bytes（52 → 36 行，−27%）。「架構」段夾住嘅改動史（Vercel 07-19 改名經過、portfolio section 07-19 轉正）刪走——嗰啲屬 CHANGELOG；UI 鐵律嘅 22px 例外由 5 行濃縮做 2 行；「registry 登記狀態待核實」查實咗（已登記）順手清走。
+- **刻意保留（唔准當廢話刪）**：所有「反直覺」規則同「有 reason 嘅決定」——刪咗下個 session 一定會做錯。改前版本 → `_to_delete/CLAUDE.md.bak-20260725`。
+- **背景**：同日 audit 咗全部 14 份 CLAUDE.md，結論係**其餘 11 份唔使大改**（全部已喺 100 行/6KB 內，整體只慳 ~27%，唔值得冒刪錯 gotcha 嘅險）。只做呢 3 份高收益嘅。
+
 ## 2026-07-25 `.active-session.lock*` 冇入 .gitignore → session 鎖檔一直推上 GitHub
 
 - **問題**：`session-lock.sh` 喺每個 repo 根寫 `.active-session.lock`；release 嗰陣 Drive mount `rm` 唔到（device bridge 冇 rm 權限），會 fallback 改名做 `.active-session.lock.DELETE-ME-<epoch>`。兩種檔全部 repo 都**冇入 `.gitignore`**，所以 `github_push.py` 照推——最舊一個殘留檔 timestamp 係 **2026-07-14**，即係呢個洩漏行咗成十日。
