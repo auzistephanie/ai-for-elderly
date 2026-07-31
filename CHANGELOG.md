@@ -4,6 +4,11 @@
 
 > 改動記錄出口：新條目一律插喺呢個檔案頂部。CLAUDE.md 只放路由同現行規則。Plan1–5 開發史詳情 → `README.md` + `docs/superpowers/plans/*.md`（唔喺度重複）。
 
+## 2026-07-31 CLAUDE.md ⚙️ Standards block 事實更正（Opus 5 制度複檢連帶）
+
+- `governance 00–05（派 subagent 先讀 01+03…）` → `governance 00–06（派工跟 01 §1 門檻表，要派先抄 03 模板…）`。
+- 原因：06-STANDARDS.md 2026-07-18 已加入但 router 行仲寫 00–05；「先讀 01+03」2026-07-31 鬆綁（為派一個 agent 先燒 230 行本身就係 context 稅）。正本改動見 stephanie-personal CHANGELOG 同日條目。
+
 ## 2026-07-25 CLAUDE.md 瘦身（跟 Anthropic《new rules of context engineering for Claude 5》）
 
 - **原則**：CLAUDE.md 要輕，token 主力花喺 **gotchas**（模型預設判斷會做相反嘅嘢），能推斷／已寫喺 spec 嘅嘢一律唔好抄多次。
