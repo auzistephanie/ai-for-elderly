@@ -1,5 +1,7 @@
 # CHANGELOG — AI老友記（AI for Elderly）
 
+- 2026-07-31：`.gitignore` 加 `*.bak-*` 第二道防線 — 配合 06-STANDARDS §S3「備份一律開喺 `_to_delete/`」，就算漏咗 mv 都唔會畀 `github_push.py` 誤推上 GitHub（2026-07-25 事故嘅根治）。本 repo 冇 governance `backups/`，所以唔需要 negation 例外。
+
 - 2026-07-31：repo 搬出 Google Drive Mirror，新位置 `~/Desktop/dev/AI for elderly`。原因：node_modules 嘅 npm `.bin` symlink 令 Drive 持續報 sync error。換機唔再靠 Drive 帶 secrets，詳見 `stephanie-personal/docs/NEW-MACHINE-SETUP.md` §9。
 
 > 改動記錄出口：新條目一律插喺呢個檔案頂部。CLAUDE.md 只放路由同現行規則。Plan1–5 開發史詳情 → `README.md` + `docs/superpowers/plans/*.md`（唔喺度重複）。
