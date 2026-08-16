@@ -27,7 +27,7 @@ Push（`github_push.py`，永不 git CLI・HTTPS・一 run 一 commit・**開工
 - 配色：米白 `#faf8f4` + 深綠 `#2f6f4f`。
 - 未決（要 Stephanie 拍板）：自訂 domain（暫唔跟）、定價/基金申請時機（遲啲先）。
 
-## ✅ 完成前檢查（本 repo 專屬 DoD；通用四格 → 02-JUDGMENT §R2）
+## ✅ 完成前檢查（本 repo 專屬 DoD；通用四格 → STANDARDS.md §S2）
 
 1. 改咗 `scripts/generate_lessons.py` → 真跑 `python3 -m pytest scripts/test_generate_lessons.py`，貼 output
 2. HTML（mockup / landing）有改 → 瀏覽器實開驗一次；`app/` 有改 → 實開 PWA 行一次受影響 flow
