@@ -1,5 +1,7 @@
 # CHANGELOG — AI老友記（AI for Elderly）
 
+- 2026-08-29：**刪走主頁「唔識就撳我」死掣**——Cowork code review 揪出呢個掣一直 `disabled`、寫住「快將推出」，spec §7 原本鎖定要有,但成個 codebase／landing page 搵唔到任何真聯絡方式（冇WhatsApp號碼、冇電話、冇FAQ內容）,唔想亂作假嘅求助渠道呃長者。Stephanie 拍板：而家寧願刪走個掣都好過留低一個永遠撳唔郁嘅死掣。`HomeScreen.tsx` 移除咗個 button block，`HomeScreen.test.tsx` 對應斷言改做「確認個掣冇再render」；`AI-elder-app-SPEC.md` §7.8 同步標記為已取消,留低原因方便日後有真聯絡方式先再加返。197 個測試（原196+1個新斷言）、`tsc -b`、`oxlint`、`vite build` 全部行過、全綠。
+
 - 2026-08-29：**新增 top-level `AppErrorBoundary`**——之前所有 error 處理都靠 `useAsyncData`/`useAsyncAction` 包住,但漏網之魚（例如某課 lesson JSON 格式壞咗喺 render 途中先炸）會令成個 app 變白畫面,長者見到會唔知發生咩事、亦唔知撳邊度救返。加咗 `app/src/components/AppErrorBoundary.tsx`（React class component,`main.tsx` 包住 `<App />`）,catch 到任何未接住嘅 render/lifecycle error 就顯示「哎呀，個 app 出咗少少問題」+ 「重新載入」掣,同 `ErrorRetry.tsx` 嘅視覺風格一致。緣起：Cowork code review 揪出呢個缺口,連埋 `get_pending_otp` RPC 保安漏動、主頁「唔識就撳我」永久 disabled stub 一齊記低咗（後兩樣未修,見 project memory `ai-elder-app-audit-2026-08-29.md`,需要 Stephanie 拍板先郁）。196 個測試（含新增 2 個）、`tsc -b`、`oxlint`、`vite build` 全部行過、全綠。
 
 - 2026-08-01（承 07-31 制度複檢）：**`scripts/github_push.py` 修靜默故障** — 舊版 `_PUSH_STATE_DIR` 用 `os.path.dirname(REPO)` 當 stephanie-personal 係隔籬 folder；04-MAINTENANCE §6 將 5 個 repo 搬出 Drive Mirror 後假設崩咗，`makedirs` 靜靜咁喺 `~/Desktop/dev`、`~/dev`、`daily-novel/` 開咗 3 個假 stephanie-personal，concurrent-push 偵測對 6 個 repo 死咗都冇人知（真 state 檔停留喺 7/26–7/30）。改為 `STEPHANIE_PERSONAL_DIR` 環境變數 → Drive 正本絕對路徑 → legacy sibling 三段 resolve，搵唔到就**唔寫兼出聲**（S5「死咗邊個會知」）。12 份 script 一齊改，py_compile 全過，sales-trainer 實跑驗證真 state 有更新。假 folder 已收入 `_to_delete/`。

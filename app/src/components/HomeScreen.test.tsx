@@ -43,9 +43,13 @@ describe('HomeScreen', () => {
     expect(onSelectLesson).toHaveBeenCalledWith('af');
   });
 
-  it('keeps the anti-fraud and help buttons disabled when unavailable', () => {
+  it('keeps the anti-fraud button disabled when unavailable', () => {
     render(<HomeScreen nextLesson={seedLesson} antiFraudLesson={null} streakCount={0} onSelectLesson={() => {}} />);
     expect(screen.getByText('防騙必修班').closest('button')).toBeDisabled();
-    expect(screen.getByText('唔識就撳我').closest('button')).toBeDisabled();
+  });
+
+  it('does not render the removed 唔識就撳我 stub button', () => {
+    render(<HomeScreen nextLesson={seedLesson} antiFraudLesson={null} streakCount={0} onSelectLesson={() => {}} />);
+    expect(screen.queryByText('唔識就撳我')).not.toBeInTheDocument();
   });
 });

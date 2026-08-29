@@ -51,13 +51,6 @@ export function HomeScreen({ nextLesson, antiFraudLesson, streakCount, onSelectL
             <small>{antiFraudLesson ? antiFraudLesson.title : '快將推出'}</small>
           </span>
         </button>
-        <button className="bigbtn" style={{ background: '#eef5fc', color: '#2a5d8f' }} disabled>
-          <span className="ico">📞</span>
-          <span>
-            唔識就撳我
-            <small>快將推出</small>
-          </span>
-        </button>
       </div>
       <div className="streak-strip">
         🔥 連續學咗 <b style={{ color: '#d9822b', fontSize: 26 }}>&nbsp;{streakCount}&nbsp;</b> 日，好叻呀！
