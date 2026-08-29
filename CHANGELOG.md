@@ -1,5 +1,7 @@
 # CHANGELOG — AI老友記（AI for Elderly）
 
+- 2026-08-29：**新增 top-level `AppErrorBoundary`**——之前所有 error 處理都靠 `useAsyncData`/`useAsyncAction` 包住,但漏網之魚（例如某課 lesson JSON 格式壞咗喺 render 途中先炸）會令成個 app 變白畫面,長者見到會唔知發生咩事、亦唔知撳邊度救返。加咗 `app/src/components/AppErrorBoundary.tsx`（React class component,`main.tsx` 包住 `<App />`）,catch 到任何未接住嘅 render/lifecycle error 就顯示「哎呀，個 app 出咗少少問題」+ 「重新載入」掣,同 `ErrorRetry.tsx` 嘅視覺風格一致。緣起：Cowork code review 揪出呢個缺口,連埋 `get_pending_otp` RPC 保安漏動、主頁「唔識就撳我」永久 disabled stub 一齊記低咗（後兩樣未修,見 project memory `ai-elder-app-audit-2026-08-29.md`,需要 Stephanie 拍板先郁）。196 個測試（含新增 2 個）、`tsc -b`、`oxlint`、`vite build` 全部行過、全綠。
+
 - 2026-08-01（承 07-31 制度複檢）：**`scripts/github_push.py` 修靜默故障** — 舊版 `_PUSH_STATE_DIR` 用 `os.path.dirname(REPO)` 當 stephanie-personal 係隔籬 folder；04-MAINTENANCE §6 將 5 個 repo 搬出 Drive Mirror 後假設崩咗，`makedirs` 靜靜咁喺 `~/Desktop/dev`、`~/dev`、`daily-novel/` 開咗 3 個假 stephanie-personal，concurrent-push 偵測對 6 個 repo 死咗都冇人知（真 state 檔停留喺 7/26–7/30）。改為 `STEPHANIE_PERSONAL_DIR` 環境變數 → Drive 正本絕對路徑 → legacy sibling 三段 resolve，搵唔到就**唔寫兼出聲**（S5「死咗邊個會知」）。12 份 script 一齊改，py_compile 全過，sales-trainer 實跑驗證真 state 有更新。假 folder 已收入 `_to_delete/`。
 
 - 2026-07-31：`.gitignore` 加 `*.bak-*` 第二道防線 — 配合 06-STANDARDS §S3「備份一律開喺 `_to_delete/`」，就算漏咗 mv 都唔會畀 `github_push.py` 誤推上 GitHub（2026-07-25 事故嘅根治）。本 repo 冇 governance `backups/`，所以唔需要 negation 例外。
