@@ -1,5 +1,11 @@
 # CHANGELOG — AI老友記（AI for Elderly）
 
+- 2026-10-11：**主頁 5 項長者易用性修正**。① 問候語按時間（早晨／午安／晚安）＋長者名（新增 `fetchDisplayName`，best-effort，攞唔到就唔講名）② 連續 0 日唔再「好叻呀」，改「今日學一課，就係你嘅第 1 日」③ 刪走同「今日新課」大卡重複嘅「上堂」掣（連帶「暫時得閒」字眼消失）；大卡加 `role=button`＋鍵盤 Enter/Space＋focus 外框 ④ `global.css` 字體 `px` → `rem`（預設 16px 下數值不變，但跟隨手機大字體設定）。205 個測試、`tsc -b`、`vite build` 全過；未實機開 PWA、未 push（token 401）。
+
+- 2026-10-11：**長者試用評審後改 6 項易用性**（登入／上堂／朗讀，未動 OTP 架構）。① 登入每步加「◀ 返去」② 禁用嘅「下一步」加提示字 ③ 驗證碼畫面改「已經幫你填好，撳確認就得」④ 電話欄自動去空格同 +852、`inputMode=numeric` ⑤ 課堂加「◀ 上一步」⑥ 朗讀：語速 0.85、讀緊時變「撳一下停」、離開該步即收聲、不支援裝置顯示提示（`speech.ts` 新增 `isSpeechSupported`/`stopSpeaking`，`speakCantonese` 加 `onDone`）；另 Gemini 提示卡字 18/20px → 22px。202 個測試、`tsc -b`、`vite build` 全過。**未做**：實機瀏覽器行 flow（生產版要真電話 OTP）、push（`github_push.py --check` 回 401，token 失效）。
+
+- 2026-10-11：**已知風險（Stephanie 拍板：MVP 階段接受，未改）——`get_pending_otp` 等同「知電話號碼就登入到」**。Supabase security advisor 報 `public.get_pending_otp(p_phone)` 係 SECURITY DEFINER 而 anon 可 call。呢個係 Plan 2 刻意設計（未登入 client 要讀返 OTP 顯示喺畫面，冇真 SMS），revoke anon 會令登入完全壞。但後果係：任何人知道某長者電話號碼 → `signInWithOtp` → call `get_pending_otp` 攞 code → 以佢身份登入（睇進度、家人連結、留言）。**有真用戶之前要處理**：轉真 SMS（Send-SMS hook 改 dispatch 去供應商＋drop `get_pending_otp`），或者設計 device-binding。同次 advisor 嘅 `create_pairing_code`／`redeem_pairing_code`（authenticated 可 call）屬設計如此（入面 check `auth.uid()`、固定 search_path），接受。
+
 - 2026-08-29：**刪走主頁「唔識就撳我」死掣**——Cowork code review 揪出呢個掣一直 `disabled`、寫住「快將推出」，spec §7 原本鎖定要有,但成個 codebase／landing page 搵唔到任何真聯絡方式（冇WhatsApp號碼、冇電話、冇FAQ內容）,唔想亂作假嘅求助渠道呃長者。Stephanie 拍板：而家寧願刪走個掣都好過留低一個永遠撳唔郁嘅死掣。`HomeScreen.tsx` 移除咗個 button block，`HomeScreen.test.tsx` 對應斷言改做「確認個掣冇再render」；`AI-elder-app-SPEC.md` §7.8 同步標記為已取消,留低原因方便日後有真聯絡方式先再加返。197 個測試（原196+1個新斷言）、`tsc -b`、`oxlint`、`vite build` 全部行過、全綠。
 
 - 2026-08-29：**新增 top-level `AppErrorBoundary`**——之前所有 error 處理都靠 `useAsyncData`/`useAsyncAction` 包住,但漏網之魚（例如某課 lesson JSON 格式壞咗喺 render 途中先炸）會令成個 app 變白畫面,長者見到會唔知發生咩事、亦唔知撳邊度救返。加咗 `app/src/components/AppErrorBoundary.tsx`（React class component,`main.tsx` 包住 `<App />`）,catch 到任何未接住嘅 render/lifecycle error 就顯示「哎呀，個 app 出咗少少問題」+ 「重新載入」掣,同 `ErrorRetry.tsx` 嘅視覺風格一致。緣起：Cowork code review 揪出呢個缺口,連埋 `get_pending_otp` RPC 保安漏動、主頁「唔識就撳我」永久 disabled stub 一齊記低咗（後兩樣未修,見 project memory `ai-elder-app-audit-2026-08-29.md`,需要 Stephanie 拍板先郁）。196 個測試（含新增 2 個）、`tsc -b`、`oxlint`、`vite build` 全部行過、全綠。

@@ -12,11 +12,26 @@ function findCantoneseVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoic
   );
 }
 
-export function speakCantonese(text: string) {
-  if (typeof window === 'undefined' || !window.speechSynthesis) return;
+export function isSpeechSupported(): boolean {
+  return typeof window !== 'undefined' && !!window.speechSynthesis;
+}
+
+export function stopSpeaking() {
+  if (isSpeechSupported()) window.speechSynthesis.cancel();
+}
+
+// 長者聽慢啲更易明，所以語速調低。onDone 喺讀完／中斷／出錯時都會叫一次，畀 UI 還原掣。
+export function speakCantonese(text: string, onDone?: () => void) {
+  if (!isSpeechSupported()) {
+    onDone?.();
+    return;
+  }
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = 'zh-HK';
+  utterance.rate = 0.85;
+  utterance.onend = () => onDone?.();
+  utterance.onerror = () => onDone?.();
   const voice = findCantoneseVoice(window.speechSynthesis.getVoices());
   if (voice) utterance.voice = voice;
   window.speechSynthesis.speak(utterance);

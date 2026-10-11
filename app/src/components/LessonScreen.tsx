@@ -27,6 +27,17 @@ export function LessonScreen({ lesson, userId, onComplete, completeError }: Less
   const answeredCorrect =
     quizStep !== null && selectedOption !== null && quizStep.options[selectedOption].correct;
 
+  function goBack() {
+    setSelectedOption(null);
+    setStepIndex((i) => Math.max(0, i - 1));
+  }
+
+  const backButton = stepIndex > 0 && (
+    <button className="bigbtn back-btn" onClick={goBack}>
+      <span>◀ 上一步</span>
+    </button>
+  );
+
   const isFirstLesson = lesson.layer === 1 && lesson.number === 1;
   const appStoreInfo = getGeminiAppStoreInfo(navigator.userAgent, navigator.maxTouchPoints);
 
@@ -51,6 +62,7 @@ export function LessonScreen({ lesson, userId, onComplete, completeError }: Less
             <button className="bigbtn next-btn" onClick={() => setStepIndex((i) => i + 1)}>
               <span>下一步 ▶</span>
             </button>
+            {backButton}
           </>
         )}
 
@@ -91,6 +103,7 @@ export function LessonScreen({ lesson, userId, onComplete, completeError }: Less
             <button className="bigbtn next-btn" onClick={() => setStepIndex((i) => i + 1)}>
               <span>下一步 ▶</span>
             </button>
+            {backButton}
           </>
         )}
 
@@ -126,6 +139,7 @@ export function LessonScreen({ lesson, userId, onComplete, completeError }: Less
                 </button>
               </>
             )}
+            {backButton}
           </>
         )}
       </div>

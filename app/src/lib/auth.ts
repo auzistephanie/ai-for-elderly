@@ -46,3 +46,12 @@ export async function ensureProfile(chosenRole: UserRole, displayName: string): 
   if (insertError) throw new Error(insertError.message);
   return chosenRole;
 }
+
+export async function fetchDisplayName(userId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from('elder_profiles')
+    .select('display_name')
+    .eq('user_id', userId)
+    .maybeSingle();
+  return (data?.display_name as string | undefined) ?? null;
+}

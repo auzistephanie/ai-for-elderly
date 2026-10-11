@@ -17,4 +17,15 @@ describe('SpeakButton', () => {
     expect(utterance.text).toBe('你好嗎');
     expect(utterance.lang).toBe('zh-HK');
   });
+
+  it('shows a stop state while speaking and stops on a second tap', async () => {
+    const cancelSpy = vi.spyOn(window.speechSynthesis, 'cancel');
+    render(<SpeakButton text="你好嗎" />);
+    await userEvent.click(screen.getByText('讀出嚟俾我聽'));
+    expect(screen.getByText('讀緊…撳一下停')).toBeInTheDocument();
+    cancelSpy.mockClear();
+    await userEvent.click(screen.getByText('讀緊…撳一下停'));
+    expect(cancelSpy).toHaveBeenCalled();
+    expect(screen.getByText('讀出嚟俾我聽')).toBeInTheDocument();
+  });
 });

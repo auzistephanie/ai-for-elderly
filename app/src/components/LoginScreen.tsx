@@ -41,6 +41,13 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
     onLoggedIn();
   }, '登入失敗，請再試一次');
 
+  function handlePhoneChange(value: string) {
+    // 長者好多時打「9123 4567」或者連 +852 一齊打，淨留數字，亦去走 852 區號。
+    let digits = value.replace(/\D/g, '');
+    if (digits.length > 8 && digits.startsWith('852')) digits = digits.slice(3);
+    setPhone(digits);
+  }
+
   function handleBackToPhone() {
     setOtp(null);
     confirm.clearError();
@@ -87,8 +94,12 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             onChange={(e) => setName(e.target.value)}
             placeholder="你個名"
           />
+          {!name.trim() && <p className="hint-text">請先寫低你個名，先撳得「下一步」</p>}
           <button className="bigbtn" disabled={!name.trim()} onClick={() => setStep('enter-phone')}>
             下一步
+          </button>
+          <button className="bigbtn back-btn" onClick={() => setStep('choose-role')}>
+            ◀ 返去
           </button>
         </div>
       )}
@@ -99,31 +110,35 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
           <input
             className="phone-input"
             type="tel"
+            inputMode="numeric"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="912345678"
+            onChange={(e) => handlePhoneChange(e.target.value)}
+            placeholder="91234567"
           />
+          <p className="hint-text">寫 8 位數字就得，唔使打 +852</p>
           {sendOtp.error && <p className="error-text">{sendOtp.error}</p>}
           <button className="bigbtn" disabled={sendOtp.busy || phone.length < 8} onClick={() => sendOtp.run()}>
             {sendOtp.busy ? '傳送緊…' : '傳送驗證碼'}
+          </button>
+          <button className="bigbtn back-btn" onClick={() => setStep('enter-name')}>
+            ◀ 返去
           </button>
         </div>
       )}
 
       {step === 'confirm-otp' && (
         <div className="fam-card">
-          <p>驗證碼：</p>
+          <p>驗證碼已經幫你填好 ✅</p>
+          <p className="hint-text">唔使自己打，撳下面「確認登入」就得</p>
           {/* 呢個 app 用自訂 Send SMS Auth Hook 代替真實短訊，所以直接喺畫面度顯示驗證碼係故意噉樣設計，唔係漏咗做保安 — 詳見 Plan 2 設計文件。 */}
           <p className="otp-display">{otp}</p>
           {confirm.error && <p className="error-text">{confirm.error}</p>}
           <button className="bigbtn" disabled={confirm.busy} onClick={() => confirm.run()}>
             {confirm.busy ? '確認緊…' : '確認登入'}
           </button>
-          {confirm.error && (
-            <button className="bigbtn" onClick={handleBackToPhone}>
-              撳呢度返去重新輸入電話
-            </button>
-          )}
+          <button className="bigbtn back-btn" onClick={handleBackToPhone}>
+            ◀ {confirm.error ? '撳呢度返去重新輸入電話' : '返去'}
+          </button>
         </div>
       )}
     </div>

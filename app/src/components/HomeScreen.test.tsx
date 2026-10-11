@@ -21,10 +21,37 @@ describe('HomeScreen', () => {
     expect(onSelectLesson).toHaveBeenCalledWith(seedLesson.id);
   });
 
-  it('shows an encouragement message and disables the 上堂 button when there is no next lesson', () => {
+  it('shows an encouragement message and no lesson card when there is no next lesson', () => {
     render(<HomeScreen nextLesson={null} antiFraudLesson={null} streakCount={0} onSelectLesson={() => {}} />);
     expect(screen.getByText('今層學晒喇', { exact: false })).toBeInTheDocument();
-    expect(screen.getByText('上堂').closest('button')).toBeDisabled();
+    expect(screen.queryByText('開始上堂 ▶')).not.toBeInTheDocument();
+  });
+
+  it('greets by time of day and by name', () => {
+    const at = (h: number) => new Date(2026, 9, 11, h, 0);
+    const { rerender } = render(
+      <HomeScreen nextLesson={null} antiFraudLesson={null} streakCount={0} displayName="陳生" now={at(9)} onSelectLesson={() => {}} />,
+    );
+    expect(screen.getByText(/早晨，陳生/)).toBeInTheDocument();
+    rerender(<HomeScreen nextLesson={null} antiFraudLesson={null} streakCount={0} displayName="陳生" now={at(15)} onSelectLesson={() => {}} />);
+    expect(screen.getByText(/午安，陳生/)).toBeInTheDocument();
+    rerender(<HomeScreen nextLesson={null} antiFraudLesson={null} streakCount={0} now={at(20)} onSelectLesson={() => {}} />);
+    expect(screen.getByText(/晚安/)).toBeInTheDocument();
+    expect(screen.getByText(/晚安/).textContent).not.toContain('，');
+  });
+
+  it('does not praise a zero-day streak', () => {
+    render(<HomeScreen nextLesson={seedLesson} antiFraudLesson={null} streakCount={0} onSelectLesson={() => {}} />);
+    expect(screen.queryByText(/好叻呀/)).not.toBeInTheDocument();
+    expect(screen.getByText(/第 1 日/)).toBeInTheDocument();
+  });
+
+  it('opens the lesson from the keyboard on the today-card', async () => {
+    const onSelectLesson = vi.fn();
+    render(<HomeScreen nextLesson={seedLesson} antiFraudLesson={null} streakCount={0} onSelectLesson={onSelectLesson} />);
+    screen.getByRole('button', { name: /開始上堂/ }).focus();
+    await userEvent.keyboard('{Enter}');
+    expect(onSelectLesson).toHaveBeenCalledWith(seedLesson.id);
   });
 
   it('enables the anti-fraud button once that lesson exists, and calls onSelectLesson with its id', async () => {

@@ -118,4 +118,13 @@ describe('LessonScreen', () => {
     const link = screen.getByRole('link', { name: /攞 Gemini/ });
     expect(link.getAttribute('href')).toMatch(/^https:\/\/(play\.google\.com|apps\.apple\.com)\//);
   });
+
+  it('lets the user step back, and hides the back button on the first step', async () => {
+    render(<LessonScreen lesson={seedLesson} userId="u1" onComplete={vi.fn()} />);
+    expect(screen.queryByText('◀ 上一步')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByText('下一步 ▶'));
+    expect(screen.getByText('睇下 AI 點答')).toBeInTheDocument();
+    await userEvent.click(screen.getByText('◀ 上一步'));
+    expect(screen.getByText('點解要學呢樣嘢？')).toBeInTheDocument();
+  });
 });

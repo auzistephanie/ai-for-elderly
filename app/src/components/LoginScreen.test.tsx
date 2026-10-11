@@ -31,7 +31,7 @@ describe('LoginScreen', () => {
     await userEvent.click(screen.getByText('我係長者'));
     await userEvent.type(screen.getByPlaceholderText('你個名'), '陳生');
     await userEvent.click(screen.getByText('下一步'));
-    await userEvent.type(screen.getByPlaceholderText('912345678'), '91234567');
+    await userEvent.type(screen.getByPlaceholderText('91234567'), '91234567');
     await userEvent.click(screen.getByText('傳送驗證碼'));
 
     expect(await screen.findByText('561166')).toBeInTheDocument();
@@ -58,7 +58,7 @@ describe('LoginScreen', () => {
     await userEvent.click(screen.getByText('我係仔女'));
     await userEvent.type(screen.getByPlaceholderText('你個名'), '陳小姐');
     await userEvent.click(screen.getByText('下一步'));
-    await userEvent.type(screen.getByPlaceholderText('912345678'), '91234567');
+    await userEvent.type(screen.getByPlaceholderText('91234567'), '91234567');
     await userEvent.click(screen.getByText('傳送驗證碼'));
 
     expect(await screen.findByText('傳送失敗，check 下電話號碼啱唔啱')).toBeInTheDocument();
@@ -77,7 +77,7 @@ describe('LoginScreen', () => {
     await user.click(screen.getByText('我係仔女'));
     await user.type(screen.getByPlaceholderText('你個名'), '陳小姐');
     await user.click(screen.getByText('下一步'));
-    await user.type(screen.getByPlaceholderText('912345678'), '91234567');
+    await user.type(screen.getByPlaceholderText('91234567'), '91234567');
     await user.click(screen.getByText('傳送驗證碼'));
 
     await vi.advanceTimersByTimeAsync(1000);
@@ -95,7 +95,7 @@ describe('LoginScreen', () => {
     await userEvent.click(screen.getByText('我係長者'));
     await userEvent.type(screen.getByPlaceholderText('你個名'), '陳生');
     await userEvent.click(screen.getByText('下一步'));
-    await userEvent.type(screen.getByPlaceholderText('912345678'), '91234567');
+    await userEvent.type(screen.getByPlaceholderText('91234567'), '91234567');
     await userEvent.click(screen.getByText('傳送驗證碼'));
     expect(await screen.findByText('561166')).toBeInTheDocument();
 
@@ -116,7 +116,7 @@ describe('LoginScreen', () => {
     await userEvent.click(screen.getByText('我係長者'));
     await userEvent.type(screen.getByPlaceholderText('你個名'), '陳生');
     await userEvent.click(screen.getByText('下一步'));
-    await userEvent.type(screen.getByPlaceholderText('912345678'), '91234567');
+    await userEvent.type(screen.getByPlaceholderText('91234567'), '91234567');
     await userEvent.click(screen.getByText('傳送驗證碼'));
 
     expect(await screen.findByText('561166')).toBeInTheDocument();
@@ -141,17 +141,17 @@ describe('LoginScreen', () => {
     await userEvent.click(screen.getByText('我係長者'));
     await userEvent.type(screen.getByPlaceholderText('你個名'), '陳生');
     await userEvent.click(screen.getByText('下一步'));
-    await userEvent.type(screen.getByPlaceholderText('912345678'), '91234567');
+    await userEvent.type(screen.getByPlaceholderText('91234567'), '91234567');
     await userEvent.click(screen.getByText('傳送驗證碼'));
     expect(await screen.findByText('561166')).toBeInTheDocument();
 
     await userEvent.click(screen.getByText('確認登入'));
     expect(await screen.findByText('驗證失敗，撳返去重新傳送')).toBeInTheDocument();
 
-    await userEvent.click(screen.getByText('撳呢度返去重新輸入電話'));
+    await userEvent.click(screen.getByText(/撳呢度返去重新輸入電話/));
 
     // Back on the phone step, with no leftover confirm-error visible anywhere.
-    expect(screen.getByPlaceholderText('912345678')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('91234567')).toBeInTheDocument();
     expect(screen.queryByText('驗證失敗，撳返去重新傳送')).not.toBeInTheDocument();
 
     // A fresh resend + confirm succeeds cleanly (proves confirm.error was actually cleared,
@@ -161,5 +161,29 @@ describe('LoginScreen', () => {
     await userEvent.click(screen.getByText('確認登入'));
 
     expect(onLoggedIn).toHaveBeenCalledTimes(1);
+  });
+
+  it('lets the user go back from every step and shows a hint instead of a silently dead button', async () => {
+    render(<LoginScreen onLoggedIn={vi.fn()} />);
+    await userEvent.click(screen.getByText('我係仔女'));
+    expect(screen.getByText(/請先寫低你個名/)).toBeInTheDocument();
+    await userEvent.click(screen.getByText('◀ 返去'));
+    expect(screen.getByText('邊個登入？')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByText('我係長者'));
+    await userEvent.type(screen.getByPlaceholderText('你個名'), '陳生');
+    await userEvent.click(screen.getByText('下一步'));
+    await userEvent.click(screen.getByText('◀ 返去'));
+    expect(screen.getByText('你個名係？')).toBeInTheDocument();
+  });
+
+  it('strips spaces and a +852 prefix from the phone number', async () => {
+    render(<LoginScreen onLoggedIn={vi.fn()} />);
+    await userEvent.click(screen.getByText('我係長者'));
+    await userEvent.type(screen.getByPlaceholderText('你個名'), '陳生');
+    await userEvent.click(screen.getByText('下一步'));
+    const input = screen.getByPlaceholderText('91234567');
+    await userEvent.type(input, '+852 9123 4567');
+    expect(input).toHaveValue('91234567');
   });
 });

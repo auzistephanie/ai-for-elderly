@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { NavBar } from './components/NavBar';
 import { HomeScreen } from './components/HomeScreen';
 import { LessonScreen } from './components/LessonScreen';
@@ -15,12 +15,14 @@ import { useProgress, computeBadges } from './hooks/useProgress';
 import { useAsyncAction } from './hooks/useAsyncAction';
 import { useAsyncData } from './hooks/useAsyncData';
 import { fetchFamilyLink } from './lib/family';
+import { fetchDisplayName } from './lib/auth';
 import { LAYER_NAMES, getNextLesson, isLayerCompleted } from './lib/courseEngine';
 import type { ScreenName } from './types/screen';
 
 function ElderShell({ userId }: { userId: string }) {
   const [screen, setScreen] = useState<ScreenName>('home');
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
   const { lessons, loaded: lessonsLoaded, error: lessonsError, reload: reloadLessons } = useLessons();
   const {
     state,
@@ -30,6 +32,17 @@ function ElderShell({ userId }: { userId: string }) {
     completeLesson,
     setFamilyShare,
   } = useProgress(userId);
+
+  // 問候語用嘅名：攞唔到就照樣得，只係唔講名，唔值得為咗佢彈 error。
+  useEffect(() => {
+    let active = true;
+    fetchDisplayName(userId)
+      .then((n) => active && setDisplayName(n))
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [userId]);
 
   function navigate(next: ScreenName) {
     setActiveLessonId(null);
@@ -78,6 +91,7 @@ function ElderShell({ userId }: { userId: string }) {
           nextLesson={nextLesson}
           antiFraudLesson={antiFraudLesson}
           streakCount={state.streakCount}
+          displayName={displayName}
           onSelectLesson={openLesson}
         />
       )}

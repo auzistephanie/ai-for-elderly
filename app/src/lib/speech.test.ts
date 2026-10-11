@@ -56,4 +56,17 @@ describe('speakCantonese', () => {
     // lang stays zh-HK so the browser's own fallback logic still has a hint to work with
     expect(utterance.lang).toBe('zh-HK');
   });
+
+  it('reads at a slower rate for elderly listeners and calls onDone when the utterance ends', () => {
+    vi.spyOn(window.speechSynthesis, 'getVoices').mockReturnValue([]);
+    const speakSpy = vi.spyOn(window.speechSynthesis, 'speak');
+    const onDone = vi.fn();
+
+    speakCantonese('你好嗎', onDone);
+
+    const utterance = speakSpy.mock.calls[0][0] as SpeechSynthesisUtterance;
+    expect(utterance.rate).toBeLessThan(1);
+    utterance.onend?.(new Event('end') as SpeechSynthesisEvent);
+    expect(onDone).toHaveBeenCalledTimes(1);
+  });
 });
