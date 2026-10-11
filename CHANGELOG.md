@@ -1,5 +1,7 @@
 # CHANGELOG — AI老友記（AI for Elderly）
 
+- 2026-10-11：**修正生產網址一直停喺舊版**。`ai-elder-app.vercel.app` 係 2026-07-19 用 `vercel alias set` 手動釘去某次部署（見 gemini-app-demo plan），唔會跟之後 push 更新，所以 landing page「免費開始學」、私隱聲明連去嘅一直係舊版。已用 Vercel 將呢個域名正式加為 `ai-elder-app` 項目域名（`app-delta-two-31.vercel.app` 同時有效），之後每次 push 自動更新；已驗證兩個網址都載入最新 bundle（含登入「◀ 返去」同朗讀「撳一下停」）。**教訓：唔好再用手動 `vercel alias set` 指生產域名。** CLAUDE.md／README／landing 網址冇改（網址本身正確）。
+
 - 2026-10-11：**主頁 5 項長者易用性修正**。① 問候語按時間（早晨／午安／晚安）＋長者名（新增 `fetchDisplayName`，best-effort，攞唔到就唔講名）② 連續 0 日唔再「好叻呀」，改「今日學一課，就係你嘅第 1 日」③ 刪走同「今日新課」大卡重複嘅「上堂」掣（連帶「暫時得閒」字眼消失）；大卡加 `role=button`＋鍵盤 Enter/Space＋focus 外框 ④ `global.css` 字體 `px` → `rem`（預設 16px 下數值不變，但跟隨手機大字體設定）。205 個測試、`tsc -b`、`vite build` 全過；未實機開 PWA、未 push（token 401）。
 
 - 2026-10-11：**長者試用評審後改 6 項易用性**（登入／上堂／朗讀，未動 OTP 架構）。① 登入每步加「◀ 返去」② 禁用嘅「下一步」加提示字 ③ 驗證碼畫面改「已經幫你填好，撳確認就得」④ 電話欄自動去空格同 +852、`inputMode=numeric` ⑤ 課堂加「◀ 上一步」⑥ 朗讀：語速 0.85、讀緊時變「撳一下停」、離開該步即收聲、不支援裝置顯示提示（`speech.ts` 新增 `isSpeechSupported`/`stopSpeaking`，`speakCantonese` 加 `onDone`）；另 Gemini 提示卡字 18/20px → 22px。202 個測試、`tsc -b`、`vite build` 全過。**未做**：實機瀏覽器行 flow（生產版要真電話 OTP）、push（`github_push.py --check` 回 401，token 失效）。
