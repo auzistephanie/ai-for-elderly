@@ -1,5 +1,7 @@
 # CHANGELOG — AI老友記（AI for Elderly）
 
+- 2026-10-12：**PWA 更新提示＋禁用掣更易認**。① `vite.config.ts` `registerType: 'autoUpdate'` → `'prompt'`，新增 `UpdateBanner`（`main.tsx` 掛喺 `<App/>` 旁）：新版喺背景下載好後頂部彈出「🎉 有新版本喇」＋「立即更新」／「遲啲先」，唔再要長者重開 app 兩次先見到新版，亦唔會上堂中途自動 reload。測試用 `tests/setup.ts` 預設 mock `virtual:pwa-register/react`；`tsconfig.app.json` 加 `vite-plugin-pwa/react` types。② `.bigbtn:disabled:not([style])` 改實色深灰底＋深灰字＋灰框（有自訂底色嘅防騙班掣照舊半透明）。208 個測試、`tsc -b`、`vite build` 全過。**未驗證**：更新提示喺真機彈出（需要先有一個舊版 SW 嘅裝置，下次再有新 push 時睇）。**舊裝置**：仍然行緊 autoUpdate 嘅舊 SW，會靜靜更新一次去新版，之後先有提示。
+
 - 2026-10-11：**修正生產網址一直停喺舊版**。`ai-elder-app.vercel.app` 係 2026-07-19 用 `vercel alias set` 手動釘去某次部署（見 gemini-app-demo plan），唔會跟之後 push 更新，所以 landing page「免費開始學」、私隱聲明連去嘅一直係舊版。已用 Vercel 將呢個域名正式加為 `ai-elder-app` 項目域名（`app-delta-two-31.vercel.app` 同時有效），之後每次 push 自動更新；已驗證兩個網址都載入最新 bundle（含登入「◀ 返去」同朗讀「撳一下停」）。**教訓：唔好再用手動 `vercel alias set` 指生產域名。** CLAUDE.md／README／landing 網址冇改（網址本身正確）。
 
 - 2026-10-11：**主頁 5 項長者易用性修正**。① 問候語按時間（早晨／午安／晚安）＋長者名（新增 `fetchDisplayName`，best-effort，攞唔到就唔講名）② 連續 0 日唔再「好叻呀」，改「今日學一課，就係你嘅第 1 日」③ 刪走同「今日新課」大卡重複嘅「上堂」掣（連帶「暫時得閒」字眼消失）；大卡加 `role=button`＋鍵盤 Enter/Space＋focus 外框 ④ `global.css` 字體 `px` → `rem`（預設 16px 下數值不變，但跟隨手機大字體設定）。205 個測試、`tsc -b`、`vite build` 全過；未實機開 PWA、未 push（token 401）。

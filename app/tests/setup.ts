@@ -19,3 +19,12 @@ const mockSpeechSynthesis = {
 globalThis.SpeechSynthesisUtterance = MockSpeechSynthesisUtterance;
 // @ts-expect-error jsdom does not implement the Web Speech API
 window.speechSynthesis = mockSpeechSynthesis;
+
+// vite-plugin-pwa 嘅 virtual module 喺 jsdom 解析唔到，預設當冇新版本。
+vi.mock('virtual:pwa-register/react', () => ({
+  useRegisterSW: () => ({
+    needRefresh: [false, () => {}],
+    offlineReady: [false, () => {}],
+    updateServiceWorker: async () => {},
+  }),
+}));

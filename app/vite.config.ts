@@ -8,7 +8,8 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt'：新版喺背景下載好之後，由 UpdateBanner 問長者「而家更新？」，唔會喺佢做緊課堂中途自動 reload。
+      registerType: 'prompt',
       includeAssets: ['favicon.svg'],
       manifest: {
         lang: 'zh-HK',
