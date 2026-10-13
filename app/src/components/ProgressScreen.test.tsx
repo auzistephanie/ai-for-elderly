@@ -20,7 +20,7 @@ describe('ProgressScreen', () => {
   it('shows a completed layer 1 and locked empty layers 2/3', () => {
     render(<ProgressScreen layers={layers} badges={badges} onSelectLessons={vi.fn()} />);
     expect(screen.getByText('✅ 完成晒 1 / 1 課')).toBeInTheDocument();
-    expect(screen.getAllByText('🔒 未有課程')).toHaveLength(2);
+    expect(screen.getAllByText('🔒 呢層暫時未有課')).toHaveLength(2);
   });
 
   it('renders unlocked badges without the locked class and locked ones with it', () => {

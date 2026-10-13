@@ -11,6 +11,7 @@ vi.mock('./supabaseClient', () => ({
 }));
 
 import { fetchComments, postComment, likeComment } from './comments';
+import { msg } from './messages';
 
 describe('fetchComments', () => {
   beforeEach(() => vi.clearAllMocks());
@@ -75,7 +76,7 @@ describe('fetchComments', () => {
     const commentsSelect = vi.fn(() => ({ eq: commentsEq }));
     fromMock.mockReturnValue({ select: commentsSelect });
 
-    await expect(fetchComments('e1')).rejects.toThrow('攞唔到留言，請再試');
+    await expect(fetchComments('e1')).rejects.toThrow(msg.commentsLoadFailed);
   });
 });
 
@@ -102,7 +103,7 @@ describe('postComment', () => {
     const insert = vi.fn().mockResolvedValue({ error: { message: 'TypeError: Failed to fetch' } });
     fromMock.mockReturnValue({ insert });
 
-    await expect(postComment('e1', '好叻呀！')).rejects.toThrow('送出失敗，請再試');
+    await expect(postComment('e1', '好叻呀！')).rejects.toThrow(msg.commentPostFailed);
   });
 });
 
@@ -125,6 +126,6 @@ describe('likeComment', () => {
     const update = vi.fn(() => ({ eq }));
     fromMock.mockReturnValue({ update });
 
-    await expect(likeComment('c1')).rejects.toThrow('撳讚失敗，請再試');
+    await expect(likeComment('c1')).rejects.toThrow(msg.likeFailed);
   });
 });

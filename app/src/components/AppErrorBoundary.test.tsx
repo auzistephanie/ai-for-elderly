@@ -36,7 +36,7 @@ describe('AppErrorBoundary', () => {
       </AppErrorBoundary>,
     );
 
-    expect(screen.getByText('哎呀，個 app 出咗少少問題')).toBeInTheDocument();
+    expect(screen.getByText('哎呀，畫面出咗問題。撳下面掣開過一次')).toBeInTheDocument();
     expect(screen.queryByText('正常內容')).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: '重新載入' }));

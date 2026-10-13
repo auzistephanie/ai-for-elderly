@@ -11,10 +11,23 @@ export function ErrorRetry({ message, onRetry, busy }: ErrorRetryProps) {
     <div className="app">
       <div className="screen">
         <div className="fam-card">
+          <p className="loading-text">出咗少少問題</p>
           <p className="error-text">{message}</p>
           <button className="bigbtn" disabled={busy} onClick={onRetry}>
             {busy ? '再試緊…' : '再試一次'}
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function LoadingScreen({ message = '載入緊，請等一陣' }: { message?: string }) {
+  return (
+    <div className="app">
+      <div className="screen">
+        <div className="fam-card">
+          <p className="loading-text">{message}</p>
         </div>
       </div>
     </div>

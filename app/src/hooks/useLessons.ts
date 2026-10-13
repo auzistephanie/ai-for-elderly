@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAsyncData } from './useAsyncData';
 import type { Lesson } from '../types/lesson';
+import { msg } from '../lib/messages';
 
 export function useLessons() {
   const fetcher = useCallback(async () => {
@@ -15,11 +16,11 @@ export function useLessons() {
     // business-raised text, so error.message can be anything Supabase's client puts there —
     // including a stringified native exception ("TypeError: Failed to fetch") on a network
     // failure, which must never reach the user (see lib/errors.ts's toFriendlyMessage).
-    if (error) throw new Error('攞唔到課堂內容');
+    if (error) throw new Error(msg.lessonsLoadFailed);
     return (data ?? []) as Lesson[];
   }, []);
 
-  const { data, error, loaded, reload } = useAsyncData<Lesson[]>(fetcher, [], '攞唔到課堂內容');
+  const { data, error, loaded, reload } = useAsyncData<Lesson[]>(fetcher, [], msg.lessonsLoadFailed);
 
   return { lessons: data ?? [], loaded, error, reload };
 }

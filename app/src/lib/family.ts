@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient';
 import { looksLikeAuthoredMessage } from './errors';
+import { msg } from './messages';
 
 // All three functions below throw on failure — callers (PairingScreen.tsx, FamilyScreen.tsx,
 // FamilyFlow in App.tsx) must wrap calls in try/catch or .catch(). fetchFamilyLink returns null
@@ -9,7 +10,7 @@ import { looksLikeAuthoredMessage } from './errors';
 
 export async function createPairingCode(): Promise<string> {
   const { data, error } = await supabase.rpc('create_pairing_code');
-  if (error || !data) throw new Error('攞唔到配對碼，請再試');
+  if (error || !data) throw new Error(msg.pairingCodeFailed);
   return data as string;
 }
 
@@ -21,7 +22,7 @@ export async function redeemPairingCode(
   // (e.g. "配對碼過期") — but error.message is also where a network failure gets a stringified
   // native exception stuffed in (e.g. "TypeError: Failed to fetch"), which must not leak to the
   // user. looksLikeAuthoredMessage's CJK heuristic tells the two apart (see lib/errors.ts).
-  if (error) throw new Error(looksLikeAuthoredMessage(error.message) ? error.message : '配對失敗，請再試');
+  if (error) throw new Error(looksLikeAuthoredMessage(error.message) ? error.message : msg.pairingFailed);
   const rows = data as { elder_user_id: string; elder_display_name: string | null }[];
   const row = rows?.[0];
   // The RPC succeeding with zero rows means the link WAS created (redeem_pairing_code already
@@ -43,7 +44,7 @@ export async function fetchFamilyLink(
     .maybeSingle();
   // Generic queries, no custom RPC business message — never trust error.message verbatim
   // (could be a stringified native exception on a network failure, see lib/errors.ts).
-  if (linkError) throw new Error('攞唔到配對狀態，請再試');
+  if (linkError) throw new Error(msg.pairingStatusFailed);
   if (!link) return null;
 
   const { data: profile, error: profileError } = await supabase
@@ -51,7 +52,7 @@ export async function fetchFamilyLink(
     .select('display_name')
     .eq('user_id', link.elder_user_id)
     .maybeSingle();
-  if (profileError) throw new Error('攞唔到長者資料，請再試');
+  if (profileError) throw new Error(msg.elderProfileFailed);
 
   return { elderUserId: link.elder_user_id, elderDisplayName: profile?.display_name ?? null };
 }

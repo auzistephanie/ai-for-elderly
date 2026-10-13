@@ -11,6 +11,7 @@ vi.mock('./supabaseClient', () => ({
 }));
 
 import { createPairingCode, redeemPairingCode, fetchFamilyLink } from './family';
+import { msg } from './messages';
 
 describe('createPairingCode', () => {
   it('returns the code from the RPC', async () => {
@@ -22,7 +23,7 @@ describe('createPairingCode', () => {
 
   it('throws with a friendly message on error', async () => {
     rpcMock.mockResolvedValue({ data: null, error: { message: 'db error' } });
-    await expect(createPairingCode()).rejects.toThrow('攞唔到配對碼，請再試');
+    await expect(createPairingCode()).rejects.toThrow(msg.pairingCodeFailed);
   });
 });
 
@@ -41,7 +42,7 @@ describe('redeemPairingCode', () => {
 
   it('falls back to a friendly message instead of leaking a network-failure error verbatim', async () => {
     rpcMock.mockResolvedValue({ data: null, error: { message: 'TypeError: Failed to fetch' } });
-    await expect(redeemPairingCode('000000')).rejects.toThrow('配對失敗，請再試');
+    await expect(redeemPairingCode('000000')).rejects.toThrow(msg.pairingFailed);
   });
 
   it('throws a distinct message (not "wrong code") when the RPC succeeds but returns no rows', async () => {
@@ -84,7 +85,7 @@ describe('fetchFamilyLink', () => {
     const select = vi.fn(() => ({ eq }));
     fromMock.mockReturnValue({ select });
 
-    await expect(fetchFamilyLink('fam1')).rejects.toThrow('攞唔到配對狀態，請再試');
+    await expect(fetchFamilyLink('fam1')).rejects.toThrow(msg.pairingStatusFailed);
   });
 
   it('throws a friendly message (does not silently return null, does not leak the raw error) when the elder-profile lookup query errors', async () => {
@@ -102,6 +103,6 @@ describe('fetchFamilyLink', () => {
       throw new Error(`unexpected table ${table}`);
     });
 
-    await expect(fetchFamilyLink('fam1')).rejects.toThrow('攞唔到長者資料，請再試');
+    await expect(fetchFamilyLink('fam1')).rejects.toThrow(msg.elderProfileFailed);
   });
 });

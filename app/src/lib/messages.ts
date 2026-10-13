@@ -1,0 +1,21 @@
+// 長者會直接睇到嘅句子。口語、講明撳邊個，唔好英文、唔好淨係「請再試」。
+export const msg = {
+  otpSendFailed: '傳唔到驗證碼。電話要 8 位數字，睇清楚再撳一次',
+  otpMissing: '驗證碼未出到。再撳一次「傳送驗證碼」',
+  loginFailed: '登入未得。撳「返去」再試過',
+  otpVerifyFailed: '驗證碼唔啱。撳「返去」，再要一次新碼',
+  pairingCodeFailed: '配對碼出唔到。再撳一次「產生配對碼」',
+  pairingFailed: '配對未得。對清楚 6 位數字同有冇過期，再撳一次',
+  shareToggleFailed: '個開關未轉到。再撳一次',
+  lessonCompleteFailed: '呢課未記低。再撳一次「完成課堂」',
+  lessonsLoadFailed: '課堂載入唔到。睇下有冇網絡，再撳「再試一次」',
+  progressLoadFailed: '進度載入唔到。睇下有冇網絡，再撳「再試一次」',
+  pairingStatusFailed: '睇唔到配對情況。睇下有冇網絡，再撳「再試一次」',
+  elderProfileFailed: '睇唔到屋企人資料。睇下有冇網絡，再撳「再試一次」',
+  roleLoadFailed: '未能分清你係長者定家人。撳「再試一次」',
+  likeFailed: '心心未撳到。再撳一次',
+  commentPostFailed: '說話未送出。再撳一次「送出鼓勵」',
+  commentsLoadFailed: '留言載入唔到。睇下有冇網絡，再試一次',
+  lessonStartFailed: '課堂開始未記低',
+  appCrashed: '哎呀，畫面出咗問題。撳下面掣開過一次',
+} as const;

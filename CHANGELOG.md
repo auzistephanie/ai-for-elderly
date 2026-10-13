@@ -1,5 +1,7 @@
 # CHANGELOG — AI老友記（AI for Elderly）
 
+- 2026-10-13：**大字模式易用性（登入／上堂／家人配對）**。手機 390px、根字 24px（約 150% 大字）行過登入→上課→家人。修：① 分享掣由 70×40px 無字色塊改成至少 4rem、寫明「開咗／閂咗」② 登入加「第 N 步，共 4 步」，長者／仔女各有一句說明；電話未打齊會講仲差幾多個數字 ③ 課堂步驟標明點解要學／睇示範／考一考，下一步掣寫明去邊；答錯加「唔緊要，撳另一個再試」④ 錯誤訊息集中 `lib/messages.ts`，口語繁中、講明撳邊個（去掉「check」）⑤ 載入唔再空白，改「載入緊，請等一陣」；錯誤加紅底⑥ 大字時獎章圓圈跟 rem 放大，唔再裁走圖案；進度卡唔再闊過畫面 ⑦ 未解鎖課堂寫明「先學完上一層」，唔再淡到睇唔清。冇加新課。208 個測試、`tsc -b`、oxlint 過。**未做**：真機 PWA、真電話 OTP（今次用本機畫面＋模擬課堂資料，冇寫 production）。
+
 - 2026-10-12：**PWA 更新提示＋禁用掣更易認**。① `vite.config.ts` `registerType: 'autoUpdate'` → `'prompt'`，新增 `UpdateBanner`（`main.tsx` 掛喺 `<App/>` 旁）：新版喺背景下載好後頂部彈出「🎉 有新版本喇」＋「立即更新」／「遲啲先」，唔再要長者重開 app 兩次先見到新版，亦唔會上堂中途自動 reload。測試用 `tests/setup.ts` 預設 mock `virtual:pwa-register/react`；`tsconfig.app.json` 加 `vite-plugin-pwa/react` types。② `.bigbtn:disabled:not([style])` 改實色深灰底＋深灰字＋灰框（有自訂底色嘅防騙班掣照舊半透明）。208 個測試、`tsc -b`、`vite build` 全過。**未驗證**：更新提示喺真機彈出（需要先有一個舊版 SW 嘅裝置，下次再有新 push 時睇）。**舊裝置**：仍然行緊 autoUpdate 嘅舊 SW，會靜靜更新一次去新版，之後先有提示。
 
 - 2026-10-11：**修正生產網址一直停喺舊版**。`ai-elder-app.vercel.app` 係 2026-07-19 用 `vercel alias set` 手動釘去某次部署（見 gemini-app-demo plan），唔會跟之後 push 更新，所以 landing page「免費開始學」、私隱聲明連去嘅一直係舊版。已用 Vercel 將呢個域名正式加為 `ai-elder-app` 項目域名（`app-delta-two-31.vercel.app` 同時有效），之後每次 push 自動更新；已驗證兩個網址都載入最新 bundle（含登入「◀ 返去」同朗讀「撳一下停」）。**教訓：唔好再用手動 `vercel alias set` 指生產域名。** CLAUDE.md／README／landing 網址冇改（網址本身正確）。

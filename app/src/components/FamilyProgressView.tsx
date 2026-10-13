@@ -4,6 +4,7 @@ import { fetchComments, postComment, type FamilyComment } from '../lib/comments'
 import { CommentList } from './CommentList';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { useAsyncAction } from '../hooks/useAsyncAction';
+import { msg } from '../lib/messages';
 
 interface FamilyProgressViewProps {
   elderUserId: string;
@@ -17,7 +18,7 @@ export function FamilyProgressView({ elderUserId, elderDisplayName }: FamilyProg
     error: progressError,
     busy: progressBusy,
     reload: reloadProgress,
-  } = useAsyncData<RemoteProgress>(progressFetcher, [elderUserId], '攞唔到進度，請再試');
+  } = useAsyncData<RemoteProgress>(progressFetcher, [elderUserId], msg.progressLoadFailed);
 
   const commentsFetcher = useCallback(() => {
     if (!progress?.familyShareEnabled) return Promise.resolve<FamilyComment[]>([]);
@@ -30,7 +31,7 @@ export function FamilyProgressView({ elderUserId, elderDisplayName }: FamilyProg
   } = useAsyncData<FamilyComment[]>(
     commentsFetcher,
     [elderUserId, progress?.familyShareEnabled],
-    '攞唔到留言，請再試',
+    msg.commentsLoadFailed,
   );
 
   const [commentText, setCommentText] = useState('');
@@ -40,7 +41,7 @@ export function FamilyProgressView({ elderUserId, elderDisplayName }: FamilyProg
     setCommentText('');
     const updated = await fetchComments(elderUserId);
     setComments(updated);
-  }, '送出失敗，請再試');
+  }, msg.commentPostFailed);
 
   if (progressError) {
     return (
@@ -49,7 +50,7 @@ export function FamilyProgressView({ elderUserId, elderDisplayName }: FamilyProg
           <h2>{elderDisplayName ?? '長者'}嘅進度</h2>
         </div>
         <div className="fam-card">
-          <p className="error-text">攞唔到進度：{progressError}</p>
+          <p className="error-text">{progressError}</p>
           <button className="bigbtn" disabled={progressBusy} onClick={reloadProgress}>
             {progressBusy ? '再試緊…' : '再試一次'}
           </button>
@@ -67,7 +68,7 @@ export function FamilyProgressView({ elderUserId, elderDisplayName }: FamilyProg
           <h2>{elderDisplayName ?? '長者'}嘅進度</h2>
         </div>
         <div className="fam-card">
-          <p>對方而家冇分享緊進度</p>
+          <p>屋企人暫時閂咗分享。叫佢喺「家人」頁開返「分享我嘅學習進度」。</p>
         </div>
       </div>
     );

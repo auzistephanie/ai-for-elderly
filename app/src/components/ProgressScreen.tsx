@@ -27,7 +27,7 @@ export function ProgressScreen({ layers, badges, onSelectLessons }: ProgressScre
           layer.totalLessons === 0 ? 0 : Math.round((layer.completedLessons / layer.totalLessons) * 100);
         const label =
           layer.totalLessons === 0
-            ? '🔒 未有課程'
+            ? '🔒 呢層暫時未有課'
             : layer.completedLessons === layer.totalLessons
               ? `✅ 完成晒 ${layer.completedLessons} / ${layer.totalLessons} 課`
               : `學緊 ${layer.completedLessons} / ${layer.totalLessons} 課`;

@@ -8,6 +8,7 @@ vi.mock('../lib/supabaseClient', () => ({
 }));
 
 import { useLessons } from './useLessons';
+import { msg } from '../lib/messages';
 
 describe('useLessons', () => {
   beforeEach(() => vi.clearAllMocks());
@@ -56,7 +57,7 @@ describe('useLessons', () => {
     const { result } = renderHook(() => useLessons());
 
     await waitFor(() => expect(result.current.loaded).toBe(true));
-    expect(result.current.error).toBe('攞唔到課堂內容');
+    expect(result.current.error).toBe(msg.lessonsLoadFailed);
     expect(result.current.lessons).toEqual([]);
   });
 

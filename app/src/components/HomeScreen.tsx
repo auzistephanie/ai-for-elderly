@@ -67,14 +67,14 @@ export function HomeScreen({
           <span className="ico">🛡️</span>
           <span>
             防騙必修班
-            <small>{antiFraudLesson ? antiFraudLesson.title : '快將推出'}</small>
+            <small>{antiFraudLesson ? antiFraudLesson.title : '暫時未有課'}</small>
           </span>
         </button>
       </div>
       <div className="streak-strip">
         {streakCount > 0 ? (
           <>
-            🔥 連續學咗 <b style={{ color: '#d9822b', fontSize: 26 }}>&nbsp;{streakCount}&nbsp;</b> 日，好叻呀！
+            🔥 連續學咗 <b style={{ color: '#d9822b', fontSize: '1.625rem' }}>&nbsp;{streakCount}&nbsp;</b> 日，好叻呀！
           </>
         ) : (
           <>🔥 今日學一課，就係你嘅第 1 日！</>

@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient';
 import type { UserRole } from '../types/auth';
+import { msg } from './messages';
 
 export function toE164(phone: string): string {
   const trimmed = phone.trim();
@@ -12,7 +13,7 @@ export function toE164(phone: string): string {
 
 export async function requestOtp(phone: string): Promise<void> {
   const { error } = await supabase.auth.signInWithOtp({ phone: toE164(phone) });
-  if (error) throw new Error('傳送失敗，check 下電話號碼啱唔啱');
+  if (error) throw new Error(msg.otpSendFailed);
 }
 
 export async function fetchDisplayedOtp(phone: string): Promise<string | null> {
@@ -23,7 +24,7 @@ export async function fetchDisplayedOtp(phone: string): Promise<string | null> {
 
 export async function verifyOtp(phone: string, code: string): Promise<void> {
   const { error } = await supabase.auth.verifyOtp({ phone: toE164(phone), token: code, type: 'sms' });
-  if (error) throw new Error('驗證失敗，撳返去重新傳送');
+  if (error) throw new Error(msg.otpVerifyFailed);
 }
 
 export async function ensureProfile(chosenRole: UserRole, displayName: string): Promise<UserRole> {

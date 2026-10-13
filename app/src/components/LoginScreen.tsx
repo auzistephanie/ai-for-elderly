@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { requestOtp, fetchDisplayedOtp, verifyOtp, ensureProfile } from '../lib/auth';
+import { msg } from '../lib/messages';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import type { UserRole } from '../types/auth';
 
@@ -24,11 +25,11 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       code = await fetchDisplayedOtp(phone);
     }
-    if (!code) throw new Error('攞唔到驗證碼，撳「傳送驗證碼」再試多次');
+    if (!code) throw new Error(msg.otpMissing);
 
     setOtp(code);
     setStep('confirm-otp');
-  }, '傳送失敗，check 下電話號碼啱唔啱');
+  }, msg.otpSendFailed);
 
   const confirm = useAsyncAction(async () => {
     if (!otp || !role) return;
@@ -36,10 +37,10 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
     try {
       await ensureProfile(role, name.trim());
     } catch {
-      throw new Error('登入失敗，請再試一次');
+      throw new Error(msg.loginFailed);
     }
     onLoggedIn();
-  }, '登入失敗，請再試一次');
+  }, msg.loginFailed);
 
   function handlePhoneChange(value: string) {
     // 長者好多時打「9123 4567」或者連 +852 一齊打，淨留數字，亦去走 852 區號。
@@ -62,7 +63,8 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
 
       {step === 'choose-role' && (
         <div className="fam-card">
-          <p>邊個登入？</p>
+          <div className="step-pill">第 1 步，共 4 步</div>
+          <p>你係邊個？撳下面一個</p>
           <button
             className="bigbtn"
             onClick={() => {
@@ -70,7 +72,10 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
               setStep('enter-name');
             }}
           >
-            我係長者
+            <span>
+              <span>我係長者</span>
+              <small>我想自己學</small>
+            </span>
           </button>
           <button
             className="bigbtn"
@@ -79,13 +84,17 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
               setStep('enter-name');
             }}
           >
-            我係仔女
+            <span>
+              <span>我係仔女</span>
+              <small>我想睇屋企人學成點</small>
+            </span>
           </button>
         </div>
       )}
 
       {step === 'enter-name' && (
         <div className="fam-card">
+          <div className="step-pill">第 2 步，共 4 步</div>
           <p>你個名係？</p>
           <input
             className="phone-input"
@@ -106,7 +115,8 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
 
       {step === 'enter-phone' && (
         <div className="fam-card">
-          <p>幫手輸入電話號碼</p>
+          <div className="step-pill">第 3 步，共 4 步</div>
+          <p>你嘅電話號碼</p>
           <input
             className="phone-input"
             type="tel"
@@ -115,7 +125,13 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
             onChange={(e) => handlePhoneChange(e.target.value)}
             placeholder="91234567"
           />
-          <p className="hint-text">寫 8 位數字就得，唔使打 +852</p>
+          {phone.length < 8 && (
+            <p className="hint-text">
+              {phone.length === 0
+                ? '打齊 8 位數字，先撳得「傳送驗證碼」。唔使打 +852'
+                : `仲差 ${8 - phone.length} 個數字，先撳得「傳送驗證碼」`}
+            </p>
+          )}
           {sendOtp.error && <p className="error-text">{sendOtp.error}</p>}
           <button className="bigbtn" disabled={sendOtp.busy || phone.length < 8} onClick={() => sendOtp.run()}>
             {sendOtp.busy ? '傳送緊…' : '傳送驗證碼'}
@@ -128,6 +144,7 @@ export function LoginScreen({ onLoggedIn }: LoginScreenProps) {
 
       {step === 'confirm-otp' && (
         <div className="fam-card">
+          <div className="step-pill">第 4 步，共 4 步</div>
           <p>驗證碼已經幫你填好 ✅</p>
           <p className="hint-text">唔使自己打，撳下面「確認登入」就得</p>
           {/* 呢個 app 用自訂 Send SMS Auth Hook 代替真實短訊，所以直接喺畫面度顯示驗證碼係故意噉樣設計，唔係漏咗做保安 — 詳見 Plan 2 設計文件。 */}
