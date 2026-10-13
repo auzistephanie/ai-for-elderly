@@ -1,8 +1,13 @@
 import os
+import sys
+from pathlib import Path
 
 import requests
 import streamlit as st
 from dotenv import load_dotenv
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+from generate_lessons import visible_step_speech  # noqa: E402
 
 load_dotenv()
 
@@ -129,13 +134,13 @@ for lesson in published:
 
         st.subheader("Step 1 · 點解要學")
         why_body = st.text_area("內容（每行一段）", value="\n".join(why_step["body"]), key=f"why-body-{lesson['id']}")
-        why_speak = st.text_area("讀出嚟文字", value=why_step["speak"], key=f"why-speak-{lesson['id']}")
+        st.caption("「讀出嚟」會讀標題加上面呢段內容，冇另一份朗讀稿。")
 
         st.subheader("Step 2 · 睇示範")
         demo_bubbles_text = "\n".join(f"{b['speaker']}: {b['text']}" for b in demo_step["bubbles"])
         st.text(demo_bubbles_text)
         demo_body = st.text_area("內容（每行一段）", value="\n".join(demo_step["body"]), key=f"demo-body-{lesson['id']}")
-        demo_speak = st.text_area("讀出嚟文字", value=demo_step["speak"], key=f"demo-speak-{lesson['id']}")
+        st.caption("「讀出嚟」會讀標題、上面嘅對話，同埋呢段內容。")
 
         st.subheader("Step 3 · 考一考")
         quiz_title = st.text_input("題目", value=quiz_step["title"], key=f"quiz-title-{lesson['id']}")
@@ -155,8 +160,6 @@ for lesson in published:
             required_fields = {
                 "標題": title,
                 "副標題": subtitle,
-                "Step 1 讀出嚟文字": why_speak,
-                "Step 2 讀出嚟文字": demo_speak,
                 "題目": quiz_title,
                 "選項 A": opt_a,
                 "選項 B": opt_b,
@@ -167,9 +170,13 @@ for lesson in published:
             if blank_fields:
                 st.error(f"呢啲欄唔可以留空，未儲存：{'、'.join(blank_fields)}")
             else:
+                new_why = {**why_step, "body": why_body.split("\n")}
+                new_why["speak"] = visible_step_speech(new_why)
+                new_demo = {**demo_step, "body": demo_body.split("\n")}
+                new_demo["speak"] = visible_step_speech(new_demo)
                 new_steps = [
-                    {**why_step, "body": why_body.split("\n"), "speak": why_speak},
-                    {**demo_step, "body": demo_body.split("\n"), "speak": demo_speak},
+                    new_why,
+                    new_demo,
                     {
                         **quiz_step,
                         "title": quiz_title,

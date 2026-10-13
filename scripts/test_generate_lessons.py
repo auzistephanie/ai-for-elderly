@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from generate_lessons import SCENARIOS, build_prompt, parse_lesson_response
+from generate_lessons import SCENARIOS, build_prompt, parse_lesson_response, visible_step_speech
 
 VALID_RESPONSE = {
     "title": "第 2 課",
@@ -42,6 +42,15 @@ class ParseLessonResponseTests(unittest.TestCase):
         self.assertEqual(lesson["number"], SCENARIO["number"])
         self.assertEqual(lesson["title"], "第 2 課")
         self.assertEqual(lesson["status"], "published")
+
+    def test_overwrites_a_divergent_speak_script_with_the_on_screen_copy(self):
+        lesson = parse_lesson_response(json.dumps(VALID_RESPONSE), SCENARIO)
+        why, demo = lesson["steps"][0], lesson["steps"][1]
+        self.assertEqual(why["speak"], visible_step_speech(why))
+        self.assertEqual(why["speak"], "W\na\nb")
+        self.assertNotEqual(why["speak"], "s")
+        self.assertEqual(demo["speak"], "D\nu\na\nc")
+        self.assertNotEqual(demo["speak"], "s2")
 
     def test_strips_a_markdown_json_fence(self):
         fenced = "```json\n" + json.dumps(VALID_RESPONSE) + "\n```"

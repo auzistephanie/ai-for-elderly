@@ -1,5 +1,7 @@
 # CHANGELOG — AI老友記（AI for Elderly）
 
+- 2026-10-13：**「讀出嚟俾我聽」改讀畫面上嘅字**。已發佈課堂嘅 `steps[].speak` 同畫面 `body`／對話氣泡脫節（例：lesson-002「點解要學」畫面係「你有冇試過想查啲嘢…」，朗讀卻係另一句「AI 係一個可以幫你解答問題…」；示範步嘅 `speak` 亦唔包含氣泡）。`LessonScreen` 改為讀 `visibleLessonText`（標題 → 示範氣泡 → 正文），唔再讀 `speak`。`speak` 欄留喺 JSON；新生成同 admin 儲存會寫返同一段畫面文字，避免再分叉。語音語言邏輯冇改。213 個 vitest、`tsc -b`、generator pytest 10 個過。**未做**：真機 PWA 登入後撳掣（要電話 OTP）。
+
 - 2026-10-13：**大字模式易用性（登入／上堂／家人配對）**。手機 390px、根字 24px（約 150% 大字）行過登入→上課→家人。修：① 分享掣由 70×40px 無字色塊改成至少 4rem、寫明「開咗／閂咗」② 登入加「第 N 步，共 4 步」，長者／仔女各有一句說明；電話未打齊會講仲差幾多個數字 ③ 課堂步驟標明點解要學／睇示範／考一考，下一步掣寫明去邊；答錯加「唔緊要，撳另一個再試」④ 錯誤訊息集中 `lib/messages.ts`，口語繁中、講明撳邊個（去掉「check」）⑤ 載入唔再空白，改「載入緊，請等一陣」；錯誤加紅底⑥ 大字時獎章圓圈跟 rem 放大，唔再裁走圖案；進度卡唔再闊過畫面 ⑦ 未解鎖課堂寫明「先學完上一層」，唔再淡到睇唔清。冇加新課。208 個測試、`tsc -b`、oxlint 過。**未做**：真機 PWA、真電話 OTP（今次用本機畫面＋模擬課堂資料，冇寫 production）。
 
 - 2026-10-12：**PWA 更新提示＋禁用掣更易認**。① `vite.config.ts` `registerType: 'autoUpdate'` → `'prompt'`，新增 `UpdateBanner`（`main.tsx` 掛喺 `<App/>` 旁）：新版喺背景下載好後頂部彈出「🎉 有新版本喇」＋「立即更新」／「遲啲先」，唔再要長者重開 app 兩次先見到新版，亦唔會上堂中途自動 reload。測試用 `tests/setup.ts` 預設 mock `virtual:pwa-register/react`；`tsconfig.app.json` 加 `vite-plugin-pwa/react` types。② `.bigbtn:disabled:not([style])` 改實色深灰底＋深灰字＋灰框（有自訂底色嘅防騙班掣照舊半透明）。208 個測試、`tsc -b`、`vite build` 全過。**未驗證**：更新提示喺真機彈出（需要先有一個舊版 SW 嘅裝置，下次再有新 push 時睇）。**舊裝置**：仍然行緊 autoUpdate 嘅舊 SW，會靜靜更新一次去新版，之後先有提示。
