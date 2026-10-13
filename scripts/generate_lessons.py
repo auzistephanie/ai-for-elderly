@@ -52,7 +52,8 @@ SYSTEM_PROMPT = """你係「AI老友記」呢個教香港長者（60-72歲）用
 - 鼓勵性語氣，當用家係精明大人，唔好居高臨下。
 - 每句盡量短，啱畀 22px 大字顯示，唔好一大段長文字。
 
-輸出格式：淨係輸出一個 JSON object，唔好有其他文字或者 markdown code fence，形狀如下：
+輸出格式：淨係輸出一個合法 json object，唔好有其他文字或者 markdown code fence。
+字串一定要用英文雙引號 " 包住，唔好用「」或者“”做 json 字串界線。形狀如下：
 {
   "title": "string，例如「第 2 課」",
   "subtitle": "string，一句講呢課學咩",
@@ -81,6 +82,11 @@ def call_deepseek(scenario: Dict[str, Any], api_key: str) -> str:
                 {"role": "user", "content": build_prompt(scenario)},
             ],
             "temperature": 0.7,
+            # JSON mode：保證 content 係合法 JSON。2026-07-17 workflow run
+            # 29592803091 失敗就係模型用「」當字串界線，json.loads 直接爆。
+            "response_format": {"type": "json_object"},
+            # 官方要求設 max_tokens，避免 json 寫到一半被截斷。一課內容遠細過呢個上限。
+            "max_tokens": 4096,
         },
         timeout=60,
     )
@@ -107,11 +113,80 @@ def _strip_markdown_fence(text: str) -> str:
     return stripped
 
 
+# 模型偶爾會用呢啲引號代替 ASCII " 嚟開／收一個 JSON 字串。
+_CJK_QUOTE_PAIRS = {"「": "」", "『": "』", "“": "”", "‘": "’"}
+
+
+def _repair_cjk_json_quotes(text: str) -> str:
+    """Rewrites CJK quotes that were used as JSON string delimiters.
+
+    The 2026-07-17 generate-lessons run (29592803091) died on lesson-006 with
+    ``Expecting value: line 20 column 35``. The model wrote::
+
+        "text": 「親愛嘅媽咪：……開心！」"
+
+    instead of a real JSON string. Two shapes show up:
+
+    * ``「content」"`` — the opening ASCII quote was dropped; the CJK quotes
+      are part of the value and the trailing ``"`` is the real closer.
+    * ``「content」`` — the CJK quotes themselves are the delimiters.
+
+    Quotes that already sit inside a valid JSON string are left alone.
+    """
+    out = []  # type: List[str]
+    i = 0
+    length = len(text)
+    in_string = False
+    escape = False
+    while i < length:
+        ch = text[i]
+        if in_string:
+            out.append(ch)
+            if escape:
+                escape = False
+            elif ch == "\\":
+                escape = True
+            elif ch == '"':
+                in_string = False
+            i += 1
+            continue
+        closer = _CJK_QUOTE_PAIRS.get(ch)
+        if closer is not None:
+            end = text.find(closer, i + 1)
+            if end != -1:
+                if end + 1 < length and text[end + 1] == '"':
+                    # Opening ASCII quote missing; keep the CJK quotes as content.
+                    out.append(json.dumps(text[i : end + 1], ensure_ascii=False))
+                    i = end + 2
+                    continue
+                out.append(json.dumps(text[i + 1 : end], ensure_ascii=False))
+                i = end + 1
+                continue
+        if ch == '"':
+            in_string = True
+        out.append(ch)
+        i += 1
+    return "".join(out)
+
+
+def _loads_lesson_json(text: str) -> Any:
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as first_error:
+        repaired = _repair_cjk_json_quotes(text)
+        if repaired == text:
+            raise first_error
+        try:
+            return json.loads(repaired)
+        except json.JSONDecodeError:
+            raise first_error
+
+
 def parse_lesson_response(raw_text: str, scenario: Dict[str, Any]) -> Dict[str, Any]:
     text = _strip_markdown_fence(raw_text)
 
     try:
-        data = json.loads(text)
+        data = _loads_lesson_json(text)
     except json.JSONDecodeError as exc:
         raise ValueError(f"AI 回應唔係合法 JSON：{exc}\n原文：{raw_text}") from exc
 
