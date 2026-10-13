@@ -1,13 +1,8 @@
 import os
-import sys
-from pathlib import Path
 
 import requests
 import streamlit as st
 from dotenv import load_dotenv
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from generate_lessons import visible_step_speech  # noqa: E402
 
 load_dotenv()
 
@@ -134,13 +129,11 @@ for lesson in published:
 
         st.subheader("Step 1 · 點解要學")
         why_body = st.text_area("內容（每行一段）", value="\n".join(why_step["body"]), key=f"why-body-{lesson['id']}")
-        st.caption("「讀出嚟」會讀標題加上面呢段內容，冇另一份朗讀稿。")
 
         st.subheader("Step 2 · 睇示範")
         demo_bubbles_text = "\n".join(f"{b['speaker']}: {b['text']}" for b in demo_step["bubbles"])
         st.text(demo_bubbles_text)
         demo_body = st.text_area("內容（每行一段）", value="\n".join(demo_step["body"]), key=f"demo-body-{lesson['id']}")
-        st.caption("「讀出嚟」會讀標題、上面嘅對話，同埋呢段內容。")
 
         st.subheader("Step 3 · 考一考")
         quiz_title = st.text_input("題目", value=quiz_step["title"], key=f"quiz-title-{lesson['id']}")
@@ -171,9 +164,7 @@ for lesson in published:
                 st.error(f"呢啲欄唔可以留空，未儲存：{'、'.join(blank_fields)}")
             else:
                 new_why = {**why_step, "body": why_body.split("\n")}
-                new_why["speak"] = visible_step_speech(new_why)
                 new_demo = {**demo_step, "body": demo_body.split("\n")}
-                new_demo["speak"] = visible_step_speech(new_demo)
                 new_steps = [
                     new_why,
                     new_demo,

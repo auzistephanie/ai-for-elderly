@@ -65,28 +65,6 @@ SYSTEM_PROMPT = """你係「AI老友記」呢個教香港長者（60-72歲）用
 """
 
 
-def visible_step_speech(step: Dict[str, Any]) -> str:
-    """Same words as app/src/lib/visibleLessonText.ts: title, demo bubbles, then body.
-
-    `speak` used to be a second script and drifted away from the on-screen copy.
-    New lessons store the visible text in `speak` as well, so the field cannot
-    disagree with what the app reads.
-    """
-    parts = []
-    title = step.get("title") or ""
-    if isinstance(title, str) and title.strip():
-        parts.append(title)
-    if step.get("kind") == "demo":
-        for bubble in step.get("bubbles") or []:
-            text = bubble.get("text") if isinstance(bubble, dict) else ""
-            if isinstance(text, str) and text.strip():
-                parts.append(text)
-    for paragraph in step.get("body") or []:
-        if isinstance(paragraph, str) and paragraph.strip():
-            parts.append(paragraph)
-    return "\n".join(parts)
-
-
 def build_prompt(scenario: Dict[str, Any]) -> str:
     return f"呢一課嘅場景係：{scenario['topic']}\n\n請跟返 system prompt 嘅結構同格式，生成呢一課嘅內容。"
 
@@ -159,9 +137,8 @@ def parse_lesson_response(raw_text: str, scenario: Dict[str, Any]) -> Dict[str, 
     if correct_count != 1:
         raise ValueError(f"quiz options 應該啱好有 1 個 correct=true，實際有 {correct_count} 個：{quiz_options}")
 
-    for step in steps:
-        if step.get("kind") in ("why", "demo"):
-            step["speak"] = visible_step_speech(step)
+    # `steps[].speak` 留喺儲存嘅 JSON，等已發佈課堂唔使改 schema。
+    # 課堂畫面已經冇朗讀掣，app 唔讀呢欄，亦唔再將模型出嚟嘅 speak 改寫。
 
     return {
         "id": scenario["id"],

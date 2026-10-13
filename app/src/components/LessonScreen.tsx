@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Lesson } from '../types/lesson';
-import { SpeakButton } from './SpeakButton';
 import { logLessonStart } from '../lib/lessonStarts';
 import { getGeminiAppStoreInfo } from '../lib/appStoreLinks';
-import { visibleLessonText } from '../lib/visibleLessonText';
 
 const STEP_LABEL = { why: '點解要學', demo: '睇示範', quiz: '考一考' } as const;
 
@@ -61,7 +59,6 @@ export function LessonScreen({ lesson, userId, onComplete, completeError }: Less
             {step.body.map((p, i) => (
               <p className="talk" key={i}>{p}</p>
             ))}
-            <SpeakButton text={visibleLessonText(step)} />
             <button className="bigbtn next-btn" onClick={() => setStepIndex((i) => i + 1)}>
               <span>下一步：睇示範 ▶</span>
             </button>
@@ -102,7 +99,6 @@ export function LessonScreen({ lesson, userId, onComplete, completeError }: Less
             {step.body.map((p, i) => (
               <p className="talk" key={i}>{p}</p>
             ))}
-            <SpeakButton text={visibleLessonText(step)} />
             <button className="bigbtn next-btn" onClick={() => setStepIndex((i) => i + 1)}>
               <span>下一步：考一考 ▶</span>
             </button>
