@@ -49,7 +49,7 @@
 2. **睇示範** — 模擬對話 demo（user bubble + AI bubble）
 3. **考一考** — 1 條二選一大掣選擇題，答啱先完成，答錯有溫柔提示再試
 
-每步都有「🔊 讀出嚟俾我聽」掣（TTS，廣東話優先）。
+~~每步都有「🔊 讀出嚟俾我聽」掣（TTS，廣東話優先）。~~ 2026-10-13 Stephanie 拍板刪走：Mac 上 Web Speech API 不穩，課堂畫面唔再有朗讀掣，亦唔再讀 `speak`。資料欄可以留喺 JSON，唔使為咗刪欄做 migration。
 
 ### 5.3 課程類型
 
@@ -57,7 +57,7 @@
 
 ## 6. 內容管道（2026-07-19 更新：AI 生成即自動出街，唔再係人手 approve gate）
 
-- 課程內容以**結構化檔案**儲存（JSON 或 MD + frontmatter），一課一檔，包含：層級、場景、三步內容、quiz、TTS 文本。
+- 課程內容以**結構化檔案**儲存（JSON 或 MD + frontmatter），一課一檔，包含：層級、場景、三步內容、quiz。舊 `speak` 文本可以仍然喺 JSON 入面，畫面唔再顯示。
 - **更新流程**：AI 生成新課 → 直接 `status='published'` 出街，唔使等 approve。
 - 節奏：**每週 2–3 課新內容**。
 - **2026-07-19 政策改變（Stephanie 拍板）**：原本「approve flow 必須存在，嚴禁全自動出街」呢條規已取消，佢信得過 DeepSeek 嘅生成質素，唔想再逐課人手撳approve。Admin 介面（`admin/app.py`）保留，但改做事後補救用（睇/edit/unpublish 已出街嘅課），唔再係出街前必經嘅gate。
@@ -85,13 +85,13 @@
 - PWA：任何主流輕量 stack 都得（建議 Vite + React 或類似），single deploy（Vercel）。
 - 後端／資料：建議 Supabase（Stephanie 已有帳戶）— 用戶進度、家人關係、課程內容、pending 隊列。
 - 登入：**唔可以要長者打字**。建議：仔女/工作坊幫手 set 一次（電話號碼 OTP 由幫手代操作），之後裝置長期保持登入。
-- TTS：優先廣東話。Web Speech API 得就用；唔得就預先生成音檔（課程 approve 時一併生成）。
+- ~~TTS：優先廣東話。Web Speech API 得就用；唔得就預先生成音檔（課程 approve 時一併生成）。~~ 2026-10-13 已取消，見 §5.2。唔好再加朗讀掣或者預先生成音檔。
 - 離線：已解鎖課程 cache 落本機。
 - Analytics：最基本 — 邊課有人開始但冇完成（即係太難／太悶），俾 Stephanie 睇。
 
 ## 10. MVP 範圍界線
 
-**要做**：PWA 四個 tab、三層課程引擎、防騙章節、TTS、streak/獎章、家人同行、admin approve 介面、AI 生成課程 pipeline、首批 8–10 課種子內容（AI 生成 + 標明待 Stephanie approve）。
+**要做**：PWA 四個 tab、三層課程引擎、防騙章節、~~TTS~~（2026-10-13 已刪）、streak/獎章、家人同行、admin approve 介面、AI 生成課程 pipeline、首批 8–10 課種子內容（AI 生成 + 標明待 Stephanie approve）。
 
 **唔做（Phase 2+）**：原生 app 上架、付費、多語言、社群功能、真人客服。
 
@@ -99,7 +99,7 @@
 
 - [ ] 由零開始行完一課（三步 + quiz）全程唔使打過一隻字
 - [ ] 所有正文字 ≥22px，touch target ≥60px
-- [ ] 每步「讀出嚟」有聲、係廣東話
+- [x] ~~每步「讀出嚟」有聲、係廣東話~~ — 2026-10-13 取消呢項驗收（功能已刪）
 - [ ] ~~未 approve 嘅課喺 app 完全見唔到~~ — 2026-07-19 起呢條標準已經 moot（見 §6，冇再有「未approve」呢個狀態，AI生成即出街）
 - [ ] 家人分享閂咗之後，仔女端即時睇唔到進度
 - [ ] Lighthouse PWA installable ✅、手機離線開已學課程 ✅

@@ -20,7 +20,7 @@ Push（`github_push.py`，永不 git CLI・HTTPS・一 run 一 commit・**開工
 
 - App 名：AI老友記，副題「老友記嘅 AI 生活學堂」。Persona：活躍初老 60–72 歲，識 WhatsApp/YouTube，未掂過 AI。
 - 商業模式：MVP 全免費，A 收費 / C 基金兩條路保留、留 feature flag。出街形式：**先 PWA**，原生 App 係 Phase2（未做）。
-- 課程結構：三層（入門/生活應用/進階）+ 防騙必修班獨立成章，逐層解鎖。課堂形式：每課三步（點解要學→睇示範→考一考，二選一大掣）+ 每步「🔊 讀出嚟」。
+- 課程結構：三層（入門/生活應用/進階）+ 防騙必修班獨立成章，逐層解鎖。課堂形式：每課三步（點解要學→睇示範→考一考，二選一大掣）。**2026-10-13 Stephanie 拍板刪走「🔊 讀出嚟」**（Mac 上 speechSynthesis 不穩，唔好再加返）。
 - **內容管道：AI 生成即自動 `status='published'` 出街**，每週 2–3 課。⚠️ 早期「人手 approve 先出街」嗰條規 **2026-07-19 已由 Stephanie 本人取消**，唔好因為覺得高風險就自己加返個 approve gate。
 - **UI 鐵律**：正文/按鈕/選項最細 **22px**、全程撳掣唔使打字、touch target ≥60px、廣東話鼓勵語氣、底部四個 tab（主頁/上堂/進度/家人）。**例外**：純裝飾性 chrome 文字（用戶唔需要睇嚟完成課堂嗰啲，例：`.comment-author`）可以 20px。
 - 家人同行：optional，長者可隨時閂分享；仔女睇進度 + 留言鼓勵（**共享 feed，唔係 private thread**）。

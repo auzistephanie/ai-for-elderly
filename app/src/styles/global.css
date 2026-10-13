@@ -83,7 +83,6 @@ body {
 }
 .bubble-user{background:#dcf3e6; border-radius:16px; padding:14px 16px; margin-bottom:12px; font-size:1.375rem; white-space:pre-line;}
 .bubble-ai{background:#f0f0f0; border-radius:16px; padding:14px 16px; font-size:1.375rem; white-space:pre-line;}
-.listen-btn{background:#fff; color:#2f6f4f; border:2.5px solid #2f6f4f;}
 .next-btn{background:#2f6f4f; color:#fff; justify-content:center; text-align:center;}
 .quiz-opt{background:#fff; color:#1c1c1e; border:2.5px solid #ddd;}
 .quiz-opt.correct{background:#e5f2ea; border-color:#2f6f4f; color:#2f6f4f;}
