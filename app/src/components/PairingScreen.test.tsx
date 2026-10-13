@@ -18,8 +18,8 @@ describe('PairingScreen', () => {
     const onPaired = vi.fn();
 
     render(<PairingScreen onPaired={onPaired} />);
-    await userEvent.type(screen.getByPlaceholderText('配對碼'), '384920');
-    await userEvent.click(screen.getByText('配對'));
+    await userEvent.type(screen.getByPlaceholderText('6 位數字'), '384920');
+    await userEvent.click(screen.getByText('確認配對'));
 
     expect(redeemPairingCodeMock).toHaveBeenCalledWith('384920');
     expect(onPaired).toHaveBeenCalledWith({ elderUserId: 'e1', elderDisplayName: '陳生' });
@@ -29,8 +29,8 @@ describe('PairingScreen', () => {
     redeemPairingCodeMock.mockRejectedValue(new Error('配對碼過期'));
 
     render(<PairingScreen onPaired={vi.fn()} />);
-    await userEvent.type(screen.getByPlaceholderText('配對碼'), '000000');
-    await userEvent.click(screen.getByText('配對'));
+    await userEvent.type(screen.getByPlaceholderText('6 位數字'), '000000');
+    await userEvent.click(screen.getByText('確認配對'));
 
     expect(await screen.findByText('配對碼過期')).toBeInTheDocument();
   });

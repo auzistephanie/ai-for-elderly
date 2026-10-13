@@ -4,6 +4,8 @@ import { SpeakButton } from './SpeakButton';
 import { logLessonStart } from '../lib/lessonStarts';
 import { getGeminiAppStoreInfo } from '../lib/appStoreLinks';
 
+const STEP_LABEL = { why: '點解要學', demo: '睇示範', quiz: '考一考' } as const;
+
 interface LessonScreenProps {
   lesson: Lesson;
   userId: string;
@@ -49,7 +51,7 @@ export function LessonScreen({ lesson, userId, onComplete, completeError }: Less
       </div>
       <div className="lesson-body">
         <div className="step-pill">
-          第 {stepIndex + 1} 步 / 共 {lesson.steps.length} 步{step.kind === 'quiz' ? ' · 考下你' : ''}
+          第 {stepIndex + 1} 步，共 {lesson.steps.length} 步 · {STEP_LABEL[step.kind]}
         </div>
         <h3>{step.title}</h3>
 
@@ -60,7 +62,7 @@ export function LessonScreen({ lesson, userId, onComplete, completeError }: Less
             ))}
             <SpeakButton text={step.speak} />
             <button className="bigbtn next-btn" onClick={() => setStepIndex((i) => i + 1)}>
-              <span>下一步 ▶</span>
+              <span>下一步：睇示範 ▶</span>
             </button>
             {backButton}
           </>
@@ -72,7 +74,7 @@ export function LessonScreen({ lesson, userId, onComplete, completeError }: Less
               <div className="gemini-card">
                 <div className="ico">✨</div>
                 <h4>今堂要用返 Gemini App</h4>
-                <p>好多手機已經有裝，冇裝嘅撳低面掣攞返一個，完全免費。</p>
+                <p>好多手機已經有裝。未有嘅，撳下面個掣免費裝一個。</p>
                 <a className="get-app-btn" href={appStoreInfo.url}>
                   {appStoreInfo.label}
                 </a>
@@ -101,7 +103,7 @@ export function LessonScreen({ lesson, userId, onComplete, completeError }: Less
             ))}
             <SpeakButton text={step.speak} />
             <button className="bigbtn next-btn" onClick={() => setStepIndex((i) => i + 1)}>
-              <span>下一步 ▶</span>
+              <span>下一步：考一考 ▶</span>
             </button>
             {backButton}
           </>
@@ -123,6 +125,7 @@ export function LessonScreen({ lesson, userId, onComplete, completeError }: Less
                 </button>
               );
             })}
+            {selectedOption === null && <p className="hint-text">揀一個答案</p>}
             {selectedOption !== null && (
               <div
                 className="quiz-feedback"
@@ -130,6 +133,9 @@ export function LessonScreen({ lesson, userId, onComplete, completeError }: Less
               >
                 {answeredCorrect ? quizStep.feedbackCorrect : quizStep.feedbackWrong}
               </div>
+            )}
+            {selectedOption !== null && !answeredCorrect && (
+              <p className="hint-text">唔緊要，撳另一個再試。</p>
             )}
             {answeredCorrect && (
               <>

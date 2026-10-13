@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { fetchProgress, markLessonCompleted, setFamilyShareEnabled, touchStreak } from '../lib/progressApi';
 import { useAsyncData } from './useAsyncData';
+import { msg } from '../lib/messages';
 
 export interface Badge {
   id: string;
@@ -69,7 +70,7 @@ export function useProgress(userId: string | null) {
     loaded,
     reload: reloadProgress,
     setData,
-  } = useAsyncData<ProgressState>(fetcher, [userId], '攞唔到進度，請再試');
+  } = useAsyncData<ProgressState>(fetcher, [userId], msg.progressLoadFailed);
 
   const state = data ?? defaultState;
 

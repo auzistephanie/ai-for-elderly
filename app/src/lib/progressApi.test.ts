@@ -7,6 +7,7 @@ vi.mock('./supabaseClient', () => ({
 }));
 
 import { fetchProgress, markLessonCompleted, touchStreak, setFamilyShareEnabled } from './progressApi';
+import { msg } from './messages';
 
 describe('fetchProgress', () => {
   it('combines completions, streak, and share-flag queries', async () => {
@@ -62,7 +63,7 @@ describe('fetchProgress', () => {
       throw new Error(`unexpected table ${table}`);
     });
 
-    await expect(fetchProgress('u1')).rejects.toThrow('攞唔到進度，請再試');
+    await expect(fetchProgress('u1')).rejects.toThrow(msg.progressLoadFailed);
   });
 });
 
@@ -82,7 +83,7 @@ describe('markLessonCompleted', () => {
     const upsert = vi.fn().mockResolvedValue({ error: { message: 'boom' } });
     fromMock.mockReturnValue({ upsert });
 
-    await expect(markLessonCompleted('u1', 'l1')).rejects.toThrow('完成課堂紀錄唔到，請再試');
+    await expect(markLessonCompleted('u1', 'l1')).rejects.toThrow(msg.lessonCompleteFailed);
   });
 });
 
@@ -127,7 +128,7 @@ describe('touchStreak', () => {
     fromMock.mockReturnValue({ select, upsert });
 
     const calcStreak = vi.fn().mockReturnValue(5);
-    await expect(touchStreak('u1', '2026-07-16', calcStreak)).rejects.toThrow('攞唔到進度，請再試');
+    await expect(touchStreak('u1', '2026-07-16', calcStreak)).rejects.toThrow(msg.progressLoadFailed);
   });
 });
 
@@ -147,6 +148,6 @@ describe('setFamilyShareEnabled', () => {
     const update = vi.fn(() => ({ eq }));
     fromMock.mockReturnValue({ update });
 
-    await expect(setFamilyShareEnabled('u1', false)).rejects.toThrow('設定失敗，請再試');
+    await expect(setFamilyShareEnabled('u1', false)).rejects.toThrow(msg.shareToggleFailed);
   });
 });

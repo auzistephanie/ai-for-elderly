@@ -19,6 +19,7 @@ vi.mock('./supabaseClient', () => ({
 }));
 
 import { toE164, requestOtp, fetchDisplayedOtp, verifyOtp, ensureProfile } from './auth';
+import { msg } from './messages';
 
 describe('toE164', () => {
   it('prepends +852 to a bare 8-digit HK number', () => {
@@ -49,7 +50,7 @@ describe('requestOtp', () => {
 
   it('throws a friendly message on failure', async () => {
     signInWithOtpMock.mockResolvedValue({ error: { message: 'boom' } });
-    await expect(requestOtp('91234567')).rejects.toThrow('傳送失敗，check 下電話號碼啱唔啱');
+    await expect(requestOtp('91234567')).rejects.toThrow(msg.otpSendFailed);
   });
 });
 
@@ -80,7 +81,7 @@ describe('verifyOtp', () => {
 
   it('throws a friendly message on failure', async () => {
     verifyOtpMock.mockResolvedValue({ error: { message: 'boom' } });
-    await expect(verifyOtp('91234567', '561166')).rejects.toThrow('驗證失敗，撳返去重新傳送');
+    await expect(verifyOtp('91234567', '561166')).rejects.toThrow(msg.otpVerifyFailed);
   });
 });
 

@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { msg } from '../lib/messages';
 
 interface AppErrorBoundaryProps {
   children: ReactNode;
@@ -34,7 +35,8 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
         <div className="app">
           <div className="screen">
             <div className="fam-card">
-              <p className="error-text">哎呀，個 app 出咗少少問題</p>
+              <p className="loading-text">出咗少少問題</p>
+              <p className="error-text">{msg.appCrashed}</p>
               <button className="bigbtn" onClick={this.handleReload}>
                 重新載入
               </button>

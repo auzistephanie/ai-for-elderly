@@ -26,7 +26,7 @@ export function LessonListScreen({ lessons, completedLessonIds, onSelectLesson }
             <h4>
               第{LAYER_NUMERAL[layer - 1]}層 · {LAYER_NAMES[layer]}
             </h4>
-            {layerLessons.length === 0 && <p className="prog-num">未有課程</p>}
+            {layerLessons.length === 0 && <p className="prog-num">呢層暫時未有課</p>}
             {layerLessons.map((lesson) => {
               const state = getLessonState(lesson, lessons, completedLessonIds);
               const icon = state === 'locked' ? '🔒' : state === 'completed' ? '✅' : '▶️';
@@ -38,7 +38,10 @@ export function LessonListScreen({ lessons, completedLessonIds, onSelectLesson }
                   onClick={() => onSelectLesson(lesson.id)}
                 >
                   <span className="l-ico">{icon}</span>
-                  <span>{lesson.subtitle}</span>
+                  <span>
+                    <span>{lesson.subtitle}</span>
+                    {state === 'locked' && <span className="lock-note">未解鎖，先學完上一層</span>}
+                  </span>
                 </button>
               );
             })}
@@ -47,7 +50,7 @@ export function LessonListScreen({ lessons, completedLessonIds, onSelectLesson }
       })}
       <div className="prog-card">
         <h4>🛡️ 防騙必修班</h4>
-        {standaloneLessons.length === 0 && <p className="prog-num">快將推出</p>}
+        {standaloneLessons.length === 0 && <p className="prog-num">呢部分暫時未有課</p>}
         {standaloneLessons.map((lesson) => {
           const state = getLessonState(lesson, lessons, completedLessonIds);
           const icon = state === 'completed' ? '✅' : '▶️';

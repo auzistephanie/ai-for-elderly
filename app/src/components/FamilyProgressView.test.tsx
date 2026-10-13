@@ -48,7 +48,7 @@ describe('FamilyProgressView', () => {
 
     render(<FamilyProgressView elderUserId="e1" elderDisplayName="陳生" />);
 
-    expect(await screen.findByText('對方而家冇分享緊進度')).toBeInTheDocument();
+    expect(await screen.findByText(/屋企人暫時閂咗分享/)).toBeInTheDocument();
   });
 
   it('shows an error message with a retry option when fetchProgress fails', async () => {
@@ -56,7 +56,7 @@ describe('FamilyProgressView', () => {
 
     render(<FamilyProgressView elderUserId="e1" elderDisplayName="陳生" />);
 
-    expect(await screen.findByText(/攞唔到/)).toBeInTheDocument();
+    expect(await screen.findByText('network down')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /再試/ })).toBeInTheDocument();
   });
 
@@ -123,7 +123,7 @@ describe('FamilyProgressView', () => {
 
     render(<FamilyProgressView elderUserId="e1" elderDisplayName="陳生" />);
 
-    await screen.findByText('對方而家冇分享緊進度');
+    await screen.findByText(/屋企人暫時閂咗分享/);
     expect(fetchCommentsMock).not.toHaveBeenCalled();
   });
 

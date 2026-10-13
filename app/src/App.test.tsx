@@ -36,6 +36,7 @@ vi.mock('./lib/lessonStarts', () => ({
 }));
 
 import { App } from './App';
+import { msg } from './lib/messages';
 import type { Lesson } from './types/lesson';
 
 const seedLesson: Lesson = {
@@ -93,7 +94,7 @@ describe('App auth gate', () => {
     });
 
     render(<App />);
-    expect(screen.getByText('邊個登入？')).toBeInTheDocument();
+    expect(screen.getByText('你係邊個？撳下面一個')).toBeInTheDocument();
   });
 
   it('shows the elder 4-tab shell once signed in as elder', () => {
@@ -138,7 +139,7 @@ describe('App auth gate', () => {
     // 直接斷言個訊息原字顯示、唔會被包多層、亦唔會出現兩次。
     useAuthMock.mockReturnValue({ status: 'signed-in', userId: 'u1', role: 'elder' });
     const reloadMock = vi.fn();
-    useLessonsMock.mockReturnValue({ lessons: [], loaded: true, error: '攞唔到課堂內容', reload: reloadMock });
+    useLessonsMock.mockReturnValue({ lessons: [], loaded: true, error: msg.lessonsLoadFailed, reload: reloadMock });
     useProgressMock.mockReturnValue({
       state: { completedLessonIds: [], streakCount: 0, lastActiveDate: null, familyShareEnabled: true },
       loaded: true,
@@ -149,10 +150,10 @@ describe('App auth gate', () => {
     });
 
     render(<App />);
-    const matches = screen.getAllByText(/攞唔到課堂內容/);
+    const matches = screen.getAllByText(msg.lessonsLoadFailed);
     expect(matches).toHaveLength(1);
-    expect(matches[0]).toHaveTextContent('攞唔到課堂內容');
-    expect(matches[0]).not.toHaveTextContent('攞唔到課堂內容：攞唔到課堂內容');
+    expect(matches[0]).toHaveTextContent(msg.lessonsLoadFailed);
+    expect(matches[0].textContent).toBe(msg.lessonsLoadFailed);
     await userEvent.click(screen.getByText('再試一次'));
     expect(reloadMock).toHaveBeenCalledTimes(1);
   });
@@ -164,21 +165,21 @@ describe('App auth gate', () => {
     useProgressMock.mockReturnValue({
       state: { completedLessonIds: [], streakCount: 0, lastActiveDate: null, familyShareEnabled: true },
       loaded: true,
-      progressError: '攞唔到進度，請再試',
+      progressError: msg.progressLoadFailed,
       reloadProgress: reloadProgressMock,
       completeLesson: vi.fn(),
       setFamilyShare: vi.fn(),
     });
 
     render(<App />);
-    expect(screen.getByText('攞唔到進度，請再試')).toBeInTheDocument();
+    expect(screen.getByText(msg.progressLoadFailed)).toBeInTheDocument();
     await userEvent.click(screen.getByText('再試一次'));
     expect(reloadProgressMock).toHaveBeenCalledTimes(1);
   });
 
   it('completing a lesson that fails shows an inline error and does not navigate to the progress tab', async () => {
     mockElder([layer1], []);
-    const completeLessonMock = vi.fn().mockRejectedValue(new Error('完成課堂紀錄唔到，請再試'));
+    const completeLessonMock = vi.fn().mockRejectedValue(new Error(msg.lessonCompleteFailed));
     useProgressMock.mockReturnValue({
       state: { completedLessonIds: [], streakCount: 0, lastActiveDate: null, familyShareEnabled: true },
       loaded: true,
@@ -190,12 +191,12 @@ describe('App auth gate', () => {
 
     render(<App />);
     await userEvent.click(screen.getByText('開始上堂 ▶'));
-    await userEvent.click(screen.getByText('下一步 ▶'));
-    await userEvent.click(screen.getByText('下一步 ▶'));
+    await userEvent.click(screen.getByRole('button', { name: /下一步/ }));
+    await userEvent.click(screen.getByRole('button', { name: /下一步/ }));
     await userEvent.click(screen.getByText('A'));
     await userEvent.click(screen.getByText('完成課堂 🎉'));
 
-    expect(await screen.findByText('完成課堂紀錄唔到，請再試')).toBeInTheDocument();
+    expect(await screen.findByText(msg.lessonCompleteFailed)).toBeInTheDocument();
     // Still on LessonScreen, not navigated to the progress tab.
     expect(screen.getByText('完成課堂 🎉')).toBeInTheDocument();
   });
@@ -257,7 +258,7 @@ describe('App auth gate', () => {
     });
 
     render(<App />);
-    expect(screen.getByText(/攞唔到你嘅身份資料/)).toBeInTheDocument();
+    expect(screen.getByText(msg.roleLoadFailed)).toBeInTheDocument();
     expect(screen.queryByText('主頁')).not.toBeInTheDocument();
   });
 });

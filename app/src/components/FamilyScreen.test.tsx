@@ -25,17 +25,17 @@ describe('FamilyScreen', () => {
   it('toggles share via the callback', async () => {
     const onToggleShare = vi.fn().mockResolvedValue(undefined);
     render(<FamilyScreen shareEnabled={true} onToggleShare={onToggleShare} userId="u1" />);
-    await userEvent.click(screen.getByRole('button', { name: '' }));
+    await userEvent.click(screen.getByRole('button', { name: '分享進度，開咗' }));
     expect(onToggleShare).toHaveBeenCalledWith(false);
   });
 
   it('shows an inline error when toggling share fails', async () => {
-    const onToggleShare = vi.fn().mockRejectedValue(new Error('設定失敗，請再試'));
+    const onToggleShare = vi.fn().mockRejectedValue(new Error('個開關未轉到。再撳一次'));
     render(<FamilyScreen shareEnabled={true} onToggleShare={onToggleShare} userId="u1" />);
 
-    await userEvent.click(screen.getByRole('button', { name: '' }));
+    await userEvent.click(screen.getByRole('button', { name: '分享進度，開咗' }));
 
-    expect(await screen.findByText('設定失敗，請再試')).toBeInTheDocument();
+    expect(await screen.findByText('個開關未轉到。再撳一次')).toBeInTheDocument();
   });
 
   it('generates and displays a pairing code on tap', async () => {
@@ -53,12 +53,12 @@ describe('FamilyScreen', () => {
   });
 
   it('shows the thrown error message when code generation fails', async () => {
-    createPairingCodeMock.mockRejectedValue(new Error('攞唔到配對碼，請再試'));
+    createPairingCodeMock.mockRejectedValue(new Error('配對碼出唔到。再撳一次「產生配對碼」'));
     render(<FamilyScreen shareEnabled={true} onToggleShare={vi.fn()} userId="u1" />);
 
     await userEvent.click(screen.getByText('產生配對碼'));
 
-    expect(await screen.findByText('攞唔到配對碼，請再試')).toBeInTheDocument();
+    expect(await screen.findByText('配對碼出唔到。再撳一次「產生配對碼」')).toBeInTheDocument();
   });
 
   it('loads and shows family comments', async () => {
@@ -103,7 +103,7 @@ describe('FamilyScreen', () => {
 
   it('shows the empty-comments message when there are none', async () => {
     render(<FamilyScreen shareEnabled={true} onToggleShare={vi.fn()} userId="u1" />);
-    expect(await screen.findByText('仲未有家人留言，快啲叫佢哋嚟支持你啦')).toBeInTheDocument();
+    expect(await screen.findByText('仲未有留言。叫屋企人喺佢個 app 寫幾句俾你。')).toBeInTheDocument();
   });
 
   it('shows a countdown after generating a code', async () => {
@@ -114,10 +114,10 @@ describe('FamilyScreen', () => {
 
     await user.click(screen.getByText('產生配對碼'));
     expect(await screen.findByText('384920')).toBeInTheDocument();
-    expect(screen.getByText('10:00 後過期')).toBeInTheDocument();
+    expect(screen.getByText('仲剩 10 分鐘')).toBeInTheDocument();
 
     await vi.advanceTimersByTimeAsync(60_000);
-    expect(screen.getByText('9:00 後過期')).toBeInTheDocument();
+    expect(screen.getByText('仲剩 9 分鐘')).toBeInTheDocument();
 
     vi.useRealTimers();
   });
@@ -132,7 +132,7 @@ describe('FamilyScreen', () => {
     expect(await screen.findByText('384920')).toBeInTheDocument();
 
     await vi.advanceTimersByTimeAsync(10 * 60_000);
-    expect(screen.getByText('配對碼已過期')).toBeInTheDocument();
+    expect(screen.getByText(/呢組碼過期了/)).toBeInTheDocument();
     expect(screen.queryByText('384920')).not.toBeInTheDocument();
     expect(screen.getByText('產生新碼')).toBeInTheDocument();
 
@@ -151,7 +151,7 @@ describe('FamilyScreen', () => {
     await user.click(screen.getByText('產生新碼'));
     expect(await screen.findByText('111222')).toBeInTheDocument();
     expect(screen.queryByText('384920')).not.toBeInTheDocument();
-    expect(screen.getByText('10:00 後過期')).toBeInTheDocument();
+    expect(screen.getByText('仲剩 10 分鐘')).toBeInTheDocument();
 
     vi.useRealTimers();
   });

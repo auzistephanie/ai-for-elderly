@@ -8,7 +8,8 @@ import { FamilyScreen } from './components/FamilyScreen';
 import { LoginScreen } from './components/LoginScreen';
 import { PairingScreen } from './components/PairingScreen';
 import { FamilyProgressView } from './components/FamilyProgressView';
-import { ErrorRetry } from './components/ErrorRetry';
+import { ErrorRetry, LoadingScreen } from './components/ErrorRetry';
+import { msg } from './lib/messages';
 import { useAuth } from './hooks/useAuth';
 import { useLessons } from './hooks/useLessons';
 import { useProgress, computeBadges } from './hooks/useProgress';
@@ -64,7 +65,7 @@ function ElderShell({ userId }: { userId: string }) {
   if (progressError) {
     return <ErrorRetry message={progressError} onRetry={reloadProgress} />;
   }
-  if (!lessonsLoaded || !progressLoaded) return <div className="app" />;
+  if (!lessonsLoaded || !progressLoaded) return <LoadingScreen />;
 
   const nextLesson = getNextLesson(lessons, state.completedLessonIds);
   const antiFraudLesson = lessons.find((l) => l.layer === 0) ?? null;
@@ -135,7 +136,7 @@ function ElderLessonScreen({
   const { run, error } = useAsyncAction(async () => {
     await completeLesson(lesson.id);
     onCompleted();
-  }, '完成課堂紀錄唔到，請再試');
+  }, msg.lessonCompleteFailed);
 
   return <LessonScreen lesson={lesson} userId={userId} completeError={error} onComplete={() => run()} />;
 }
@@ -161,10 +162,10 @@ function FamilyFlow({ userId }: { userId: string }) {
     null,
   );
   const fetcher = useCallback(() => fetchFamilyLink(userId), [userId]);
-  const { data, error, loaded, busy, reload } = useAsyncData(fetcher, [userId], '攞唔到配對狀態，請再試');
+  const { data, error, loaded, busy, reload } = useAsyncData(fetcher, [userId], msg.pairingStatusFailed);
 
   if (error) return <ErrorRetry message={error} onRetry={reload} busy={busy} />;
-  if (!loaded) return <div className="app" />;
+  if (!loaded) return <LoadingScreen />;
 
   const link = pairedLink ?? data ?? null;
   if (link === null) {
@@ -184,7 +185,7 @@ function FamilyFlow({ userId }: { userId: string }) {
 export function App() {
   const auth = useAuth();
 
-  if (auth.status === 'loading') return <div className="app" />;
+  if (auth.status === 'loading') return <LoadingScreen />;
 
   if (auth.status === 'signed-out') {
     return (
@@ -201,7 +202,7 @@ export function App() {
   }
 
   if (auth.role === null) {
-    return <ErrorRetry message="攞唔到你嘅身份資料，請再試" onRetry={() => window.location.reload()} />;
+    return <ErrorRetry message={msg.roleLoadFailed} onRetry={() => window.location.reload()} />;
   }
 
   if (auth.role === 'family') return <FamilyFlow userId={auth.userId as string} />;

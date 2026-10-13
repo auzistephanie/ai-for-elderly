@@ -15,6 +15,7 @@ vi.mock('../lib/auth', () => ({
 }));
 
 import { LoginScreen } from './LoginScreen';
+import { msg } from '../lib/messages';
 
 describe('LoginScreen', () => {
   beforeEach(() => vi.clearAllMocks());
@@ -52,7 +53,7 @@ describe('LoginScreen', () => {
   });
 
   it('shows an error and stays on the phone step when sending fails', async () => {
-    requestOtpMock.mockRejectedValue(new Error('傳送失敗，check 下電話號碼啱唔啱'));
+    requestOtpMock.mockRejectedValue(new Error(msg.otpSendFailed));
 
     render(<LoginScreen onLoggedIn={vi.fn()} />);
     await userEvent.click(screen.getByText('我係仔女'));
@@ -61,7 +62,7 @@ describe('LoginScreen', () => {
     await userEvent.type(screen.getByPlaceholderText('91234567'), '91234567');
     await userEvent.click(screen.getByText('傳送驗證碼'));
 
-    expect(await screen.findByText('傳送失敗，check 下電話號碼啱唔啱')).toBeInTheDocument();
+    expect(await screen.findByText(msg.otpSendFailed)).toBeInTheDocument();
   });
 
   it('shows an error when the OTP never becomes available after a retry', async () => {
@@ -82,14 +83,14 @@ describe('LoginScreen', () => {
 
     await vi.advanceTimersByTimeAsync(1000);
 
-    expect(await screen.findByText('攞唔到驗證碼，撳「傳送驗證碼」再試多次')).toBeInTheDocument();
+    expect(await screen.findByText(msg.otpMissing)).toBeInTheDocument();
     vi.useRealTimers();
   });
 
   it('shows verifyOtp\'s thrown message when verification fails', async () => {
     requestOtpMock.mockResolvedValue(undefined);
     fetchDisplayedOtpMock.mockResolvedValue('561166');
-    verifyOtpMock.mockRejectedValue(new Error('驗證失敗，撳返去重新傳送'));
+    verifyOtpMock.mockRejectedValue(new Error(msg.otpVerifyFailed));
 
     render(<LoginScreen onLoggedIn={vi.fn()} />);
     await userEvent.click(screen.getByText('我係長者'));
@@ -101,7 +102,7 @@ describe('LoginScreen', () => {
 
     await userEvent.click(screen.getByText('確認登入'));
 
-    expect(await screen.findByText('驗證失敗，撳返去重新傳送')).toBeInTheDocument();
+    expect(await screen.findByText(msg.otpVerifyFailed)).toBeInTheDocument();
   });
 
   it('recovers when ensureProfile throws after a successful verifyOtp', async () => {
@@ -124,7 +125,7 @@ describe('LoginScreen', () => {
     const confirmBtn = screen.getByText('確認登入');
     await userEvent.click(confirmBtn);
 
-    expect(await screen.findByText('登入失敗，請再試一次')).toBeInTheDocument();
+    expect(await screen.findByText(msg.loginFailed)).toBeInTheDocument();
     expect(onLoggedIn).not.toHaveBeenCalled();
     expect(confirmBtn).not.toBeDisabled();
   });
@@ -132,7 +133,7 @@ describe('LoginScreen', () => {
   it('going back to the phone step from a failed confirm clears the error and allows a fresh resend', async () => {
     requestOtpMock.mockResolvedValue(undefined);
     fetchDisplayedOtpMock.mockResolvedValue('561166');
-    verifyOtpMock.mockRejectedValueOnce(new Error('驗證失敗，撳返去重新傳送')).mockResolvedValueOnce(undefined);
+    verifyOtpMock.mockRejectedValueOnce(new Error(msg.otpVerifyFailed)).mockResolvedValueOnce(undefined);
     ensureProfileMock.mockResolvedValue('elder');
 
     const onLoggedIn = vi.fn();
@@ -146,13 +147,13 @@ describe('LoginScreen', () => {
     expect(await screen.findByText('561166')).toBeInTheDocument();
 
     await userEvent.click(screen.getByText('確認登入'));
-    expect(await screen.findByText('驗證失敗，撳返去重新傳送')).toBeInTheDocument();
+    expect(await screen.findByText(msg.otpVerifyFailed)).toBeInTheDocument();
 
     await userEvent.click(screen.getByText(/撳呢度返去重新輸入電話/));
 
     // Back on the phone step, with no leftover confirm-error visible anywhere.
     expect(screen.getByPlaceholderText('91234567')).toBeInTheDocument();
-    expect(screen.queryByText('驗證失敗，撳返去重新傳送')).not.toBeInTheDocument();
+    expect(screen.queryByText(msg.otpVerifyFailed)).not.toBeInTheDocument();
 
     // A fresh resend + confirm succeeds cleanly (proves confirm.error was actually cleared,
     // not just visually hidden by navigating away from the step that renders it).
@@ -168,7 +169,7 @@ describe('LoginScreen', () => {
     await userEvent.click(screen.getByText('我係仔女'));
     expect(screen.getByText(/請先寫低你個名/)).toBeInTheDocument();
     await userEvent.click(screen.getByText('◀ 返去'));
-    expect(screen.getByText('邊個登入？')).toBeInTheDocument();
+    expect(screen.getByText('你係邊個？撳下面一個')).toBeInTheDocument();
 
     await userEvent.click(screen.getByText('我係長者'));
     await userEvent.type(screen.getByPlaceholderText('你個名'), '陳生');

@@ -25,6 +25,6 @@ describe('logLessonStart', () => {
     const insert = vi.fn().mockResolvedValue({ error: { message: 'TypeError: Failed to fetch' } });
     fromMock.mockReturnValue({ insert });
 
-    await expect(logLessonStart('u1', 'l1')).rejects.toThrow('課堂開始紀錄唔到');
+    await expect(logLessonStart('u1', 'l1')).rejects.toThrow('課堂開始未記低');
   });
 });

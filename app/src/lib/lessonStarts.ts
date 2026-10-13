@@ -5,5 +5,5 @@ export async function logLessonStart(userId: string, lessonId: string): Promise<
   // Generic query, no custom RPC business message — never trust error.message verbatim (see
   // lib/errors.ts). Doesn't actually matter for display today (LessonScreen swallows this
   // error silently), but kept consistent with every other lib/*.ts function's convention.
-  if (error) throw new Error('課堂開始紀錄唔到');
+  if (error) throw new Error('課堂開始未記低');
 }
