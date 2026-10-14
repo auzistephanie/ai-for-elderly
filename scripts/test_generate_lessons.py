@@ -57,6 +57,31 @@ class ParseLessonResponseTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             parse_lesson_response("not json at all", SCENARIO)
 
+    def test_parses_cjk_quotes_used_where_the_opening_ascii_quote_was_dropped(self):
+        # 2026-07-17 run 29592803091, lesson-006: the model wrote
+        # `"text": 「……」"` so json.loads died at the 「.
+        payload = json.loads(json.dumps(VALID_RESPONSE))
+        payload["steps"][1]["bubbles"][1]["text"] = "PLACEHOLDER"
+        raw = json.dumps(payload, ensure_ascii=False, indent=2)
+        greeting = "「親愛嘅媽咪，祝你長命百歲！」"
+        raw = raw.replace('"PLACEHOLDER"', greeting + '"')
+        lesson = parse_lesson_response(raw, SCENARIO)
+        self.assertEqual(lesson["steps"][1]["bubbles"][1]["text"], greeting)
+
+    def test_parses_cjk_quotes_used_as_the_string_delimiters(self):
+        payload = json.loads(json.dumps(VALID_RESPONSE))
+        payload["steps"][1]["bubbles"][1]["text"] = "PLACEHOLDER"
+        raw = json.dumps(payload, ensure_ascii=False, indent=2)
+        raw = raw.replace('"PLACEHOLDER"', "「你好」")
+        lesson = parse_lesson_response(raw, SCENARIO)
+        self.assertEqual(lesson["steps"][1]["bubbles"][1]["text"], "你好")
+
+    def test_keeps_cjk_quotes_that_are_already_inside_a_json_string(self):
+        payload = json.loads(json.dumps(VALID_RESPONSE))
+        payload["steps"][1]["bubbles"][1]["text"] = "「你好」"
+        lesson = parse_lesson_response(json.dumps(payload, ensure_ascii=False), SCENARIO)
+        self.assertEqual(lesson["steps"][1]["bubbles"][1]["text"], "「你好」")
+
     def test_raises_when_a_required_field_is_missing(self):
         broken = dict(VALID_RESPONSE)
         del broken["subtitle"]

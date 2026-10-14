@@ -1,5 +1,7 @@
 # CHANGELOG — AI老友記（AI for Elderly）
 
+- 2026-10-13：**Generate seed lessons workflow 失敗原因（run 29592803091，2026-07-17）係 lesson-006 嘅 JSON，唔係缺 secret**。Job log 顯示 `DEEPSEEK_API_KEY` 同 `SUPABASE_SERVICE_ROLE_KEY` 都有傳入（已遮罩），lesson-002 至 005、007 至 012 都寫入成功；lesson-006 喺 `Expecting value: line 20 column 35` 爆，因為模型用「」開咗個字串（`"text": 「親愛嘅媽咪……」"`）。`parse_lesson_response` 而家會先修呢類引號再 parse；`call_deepseek` 加 `response_format: json_object` 同 `max_tokens: 4096`。Workflow 嘅 `actions/checkout` v4→v7、`actions/setup-python` v5→v7。
+
 - 2026-10-13：**刪走成個「讀出嚟俾我聽」**。Stephanie 確認 Mac 上 speechSynthesis／PWA 朗讀不穩，唔再修，直接拆走。課堂「點解要學」「睇示範」唔再有 `SpeakButton`；刪 `speech.ts`、`visibleLessonText`（淨係用嚟砌朗讀稿）、對應測試同 Web Speech mock。`steps[].speak` 留喺 JSON／資料庫，app 同 admin 都唔再讀或者改寫。生成管道唔再把 `speak` 覆蓋成畫面文字。宣傳頁同 mockup 一併去掉朗讀字眼。pytest 10 個、vitest 200 個、`tsc -b`、oxlint、`vite build` 過。本機用課堂畫面行過三步（點解要學 → 睇示範 → 考一考），冇朗讀掣。**未做**：生產版真電話 OTP 登入；資料庫欄位冇 drop。
 
 - 2026-10-13：**「讀出嚟俾我聽」改讀畫面上嘅字**。已發佈課堂嘅 `steps[].speak` 同畫面 `body`／對話氣泡脫節（例：lesson-002「點解要學」畫面係「你有冇試過想查啲嘢…」，朗讀卻係另一句「AI 係一個可以幫你解答問題…」；示範步嘅 `speak` 亦唔包含氣泡）。`LessonScreen` 改為讀 `visibleLessonText`（標題 → 示範氣泡 → 正文），唔再讀 `speak`。`speak` 欄留喺 JSON；新生成同 admin 儲存會寫返同一段畫面文字，避免再分叉。語音語言邏輯冇改。213 個 vitest、`tsc -b`、generator pytest 10 個過。**未做**：真機 PWA 登入後撳掣（要電話 OTP）。
